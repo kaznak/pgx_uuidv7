@@ -2,6 +2,9 @@
 name = "pgx_uuidv7"
 version = "0.0.0"
 edition = "2021"
+description = "A Postgres extension to generate v7 UUIDs"
+license = "MIT"
+readme = "README.md"
 
 [lib]
 crate-type = ["cdylib"]
@@ -18,6 +21,7 @@ pg_test = []
 
 [dependencies]
 pgrx = "=0.10.2"
+uuid = { version = "1.4", features = ["std", "v7"] }
 
 [dev-dependencies]
 pgrx-tests = "=0.10.2"
