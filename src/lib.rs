@@ -3,18 +3,21 @@ use pgrx::prelude::*;
 pgrx::pg_module_magic!();
 
 #[pg_extern]
-fn hello_pgx_uuidv7() -> &'static str {
-    "Hello, pgx_uuidv7"
+fn uuid_generate_v7() -> pgrx::Uuid {
+    let u = uuid::Uuid::now_v7();
+    pgrx::Uuid::from_bytes(u.into_bytes())
 }
 
 #[cfg(any(test, feature = "pg_test"))]
 #[pg_schema]
 mod tests {
-    use pgrx::prelude::*;
+    use super::*;
 
     #[pg_test]
-    fn test_hello_pgx_uuidv7() {
-        assert_eq!("Hello, pgx_uuidv7", crate::hello_pgx_uuidv7());
+    fn test_pgx_uuidv7() {
+        let g = uuid_generate_v7();
+        let u = uuid::Uuid::from_slice(g.as_bytes()).unwrap();
+        assert_eq!(7, u.get_version_num());
     }
 
 }
