@@ -1,5 +1,6 @@
 use pgrx::prelude::*;
 
+#[derive(Debug)]
 pub(crate) struct Converter<T>(pub T);
 
 impl<T> Converter<T> {
@@ -45,11 +46,12 @@ impl From<Converter<uuid::timestamp::Timestamp>> for pgrx::Timestamp {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "pg_test"))]
+#[pg_schema]
 mod tests {
     use super::*;
 
-    #[test]
+    #[pg_test]
     fn uuid() {
         let u: uuid::Uuid = uuid::uuid!("00000000-0000-0000-0000-ffff00000000");
         let p: pgrx::Uuid = Converter(u).into();
@@ -57,7 +59,7 @@ mod tests {
         assert_eq!(u, u2);
     }
 
-    #[test]
+    #[pg_test]
     fn timestamp() {
         let t: uuid::timestamp::Timestamp =
             uuid::timestamp::Timestamp::now(uuid::timestamp::context::NoContext);
