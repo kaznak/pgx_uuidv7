@@ -1,7 +1,7 @@
 mod my_converter;
 
-use pgrx::prelude::*;
 use my_converter::Converter;
+use pgrx::prelude::*;
 
 pgrx::pg_module_magic!();
 
