@@ -50,9 +50,10 @@ impl From<Converter<uuid::timestamp::Timestamp>> for pgrx::Timestamp {
 #[pg_schema]
 mod tests {
     use super::*;
+    use chrono::prelude::*;
 
     #[pg_test]
-    fn uuid() {
+    fn uuid000() {
         let u: uuid::Uuid = uuid::uuid!("00000000-0000-0000-0000-ffff00000000");
         let p: pgrx::Uuid = Converter(u).into();
         let u2: uuid::Uuid = Converter(p).into();
@@ -60,11 +61,50 @@ mod tests {
     }
 
     #[pg_test]
-    fn timestamp() {
-        let t: uuid::timestamp::Timestamp =
-            uuid::timestamp::Timestamp::now(uuid::timestamp::context::NoContext);
-        let p: pgrx::Timestamp = Converter(t).into();
-        let t2: uuid::timestamp::Timestamp = Converter(p).into();
-        assert_eq!(t, t2);
+    fn timestamp000() {
+        let dt000 = NaiveDate::from_ymd_opt(2012, 3, 4)
+            .unwrap()
+            .and_hms_nano_opt(5, 6, 7, 123_456_000)
+            .unwrap()
+            .and_local_timezone(Utc)
+            .unwrap();
+        assert_eq!(
+            dt000.to_rfc3339_opts(chrono::SecondsFormat::Nanos, true),
+            "2012-03-04T05:06:07.123456000Z"
+        );
+        assert_eq!(dt000.timestamp(), 1_330_837_567);
+        assert_eq!(dt000.timestamp_subsec_nanos(), 123_456_000);
+    }
+
+    #[pg_test]
+    fn timestamp001() {
+        let ut000: uuid::timestamp::Timestamp = uuid::timestamp::Timestamp::from_unix(
+            uuid::timestamp::context::NoContext,
+            1_330_837_567,
+            123_456_000,
+        );
+        let (epoch, nanoseconds) = ut000.to_unix();
+        assert_eq!(epoch, 1_330_837_567);
+        assert_eq!(nanoseconds, 123_456_000);
+    }
+
+    #[pg_test]
+    fn timestamp002() {
+        let ut000: uuid::timestamp::Timestamp = uuid::timestamp::Timestamp::from_unix(
+            uuid::timestamp::context::NoContext,
+            1_330_837_567,
+            123_456_000,
+        );
+        let pt000: pgrx::Timestamp = Converter(ut000).into();
+        assert_eq!(pt000.to_iso_string(), "2012-03-04T05:06:07.123456");
+    }
+
+    #[pg_test]
+    fn timestamp003() {
+        let pt000: pgrx::Timestamp = pgrx::Timestamp::new(2012, 3, 4, 5, 6, 7.123456).unwrap();
+        let ut000: uuid::timestamp::Timestamp = Converter(pt000).into();
+        let (epoch, nanoseconds) = ut000.to_unix();
+        assert_eq!(epoch, 1_330_837_567);
+        assert_eq!(nanoseconds, 123_456_000);
     }
 }
