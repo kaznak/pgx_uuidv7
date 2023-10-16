@@ -101,10 +101,10 @@ mod tests {
 
     #[pg_test]
     fn timestamp003() {
-        let pt000: pgrx::Timestamp = pgrx::Timestamp::new(2012, 3, 4, 5, 6, 7.123456).unwrap();
+        let pt000: pgrx::Timestamp = pgrx::Timestamp::new(2012, 3, 4, 5, 6, 7.123456789).unwrap();
         let ut000: uuid::timestamp::Timestamp = Converter(pt000).into();
         let (epoch, nanoseconds) = ut000.to_unix();
         assert_eq!(epoch, 1_330_837_567);
-        assert_eq!(nanoseconds, 123_456_000);
+        assert_eq!(nanoseconds, 123_457_000); // rounding up
     }
 }
