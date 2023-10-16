@@ -64,16 +64,16 @@ mod tests {
     fn timestamp000() {
         let dt000 = NaiveDate::from_ymd_opt(2012, 3, 4)
             .unwrap()
-            .and_hms_nano_opt(5, 6, 7, 123_456_000)
+            .and_hms_nano_opt(5, 6, 7, 123_456_789)
             .unwrap()
             .and_local_timezone(Utc)
             .unwrap();
         assert_eq!(
             dt000.to_rfc3339_opts(chrono::SecondsFormat::Nanos, true),
-            "2012-03-04T05:06:07.123456000Z"
+            "2012-03-04T05:06:07.123456789Z"
         );
         assert_eq!(dt000.timestamp(), 1_330_837_567);
-        assert_eq!(dt000.timestamp_subsec_nanos(), 123_456_000);
+        assert_eq!(dt000.timestamp_subsec_nanos(), 123_456_789);
     }
 
     #[pg_test]
@@ -81,11 +81,11 @@ mod tests {
         let ut000: uuid::timestamp::Timestamp = uuid::timestamp::Timestamp::from_unix(
             uuid::timestamp::context::NoContext,
             1_330_837_567,
-            123_456_000,
+            123_456_789,
         );
         let (epoch, nanoseconds) = ut000.to_unix();
         assert_eq!(epoch, 1_330_837_567);
-        assert_eq!(nanoseconds, 123_456_000);
+        assert_eq!(nanoseconds, 123_456_789);
     }
 
     #[pg_test]
@@ -93,10 +93,10 @@ mod tests {
         let ut000: uuid::timestamp::Timestamp = uuid::timestamp::Timestamp::from_unix(
             uuid::timestamp::context::NoContext,
             1_330_837_567,
-            123_456_000,
+            123_456_789,
         );
         let pt000: pgrx::Timestamp = Converter(ut000).into();
-        assert_eq!(pt000.to_iso_string(), "2012-03-04T05:06:07.123456");
+        assert_eq!(pt000.to_iso_string(), "2012-03-04T05:06:07.123457");
     }
 
     #[pg_test]
