@@ -32,27 +32,25 @@ mod tests {
     #[pg_test]
     fn test_pgx_uuidv7_now() {
         let g = uuid_generate_v7_now();
-        let u = Uuid::from_slice(g.as_bytes()).unwrap();
+        let u: uuid::Uuid = Converter(g).into();
         assert_eq!(7, u.get_version_num());
     }
 
     #[pg_test]
     fn test_pgx_uuidv7() {
-        let ts: Timestamp =
-            <Timestamp as std::str::FromStr>::from_str("2021-01-01 00:00:00.0").unwrap();
-        let g = uuid_generate_v7(ts);
-        let u = Uuid::from_slice(g.as_bytes()).unwrap();
+        let pt000: pgrx::Timestamp = pgrx::Timestamp::new(2012, 3, 4, 5, 6, 7.123456789).unwrap();
+        let g: pgrx::Uuid = uuid_generate_v7(pt000);
+        let u: uuid::Uuid = Converter(g).into();
         assert_eq!(7, u.get_version_num());
-    }
 
-    #[pg_test]
-    fn test_pgx_uuidv7_get_timestamp() {
-        let it: Timestamp =
-            <Timestamp as std::str::FromStr>::from_str("2021-01-01 12:34:56.789").unwrap();
-        let g = uuid_generate_v7(it);
-        let ot = uuid_get_timestamp(g);
-        assert_eq!(it.to_iso_string(), ot.to_iso_string());
-        assert_eq!(it, ot);
+        let ut000: uuid::Timestamp = u.get_timestamp().unwrap();
+        let (epoch, nanoseconds) = ut000.to_unix();
+
+        let _millis = (epoch * 1000).saturating_add(nanoseconds as u64 / 1_000_000);
+
+        assert_eq!(epoch, 1_330_837_567);
+        // Uuid::new_v7 uses milliseconds, not nanoseconds the timestamp structure accepts.
+        assert_eq!(nanoseconds, 123_000_000);
     }
 }
 
