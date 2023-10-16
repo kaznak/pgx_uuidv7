@@ -24,6 +24,11 @@ fn uuid_to_timestamp(uuid: pgrx::Uuid) -> pgrx::Timestamp {
     Converter(ts).into()
 }
 
+#[pg_extern(parallel_safe)]
+fn timestamp_to_uuid_random(ts: pgrx::Timestamp) -> pgrx::Uuid {
+    uuid_generate_v7(ts)
+}
+
 #[cfg(any(test, feature = "pg_test"))]
 #[pg_schema]
 mod tests {
