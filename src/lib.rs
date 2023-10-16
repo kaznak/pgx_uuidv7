@@ -6,19 +6,19 @@ use uuid::Uuid;
 
 pgrx::pg_module_magic!();
 
-#[pg_extern]
+#[pg_extern(parallel_safe)]
 fn uuid_generate_v7_now() -> pgrx::Uuid {
     Converter(Uuid::now_v7()).into()
 }
 
-#[pg_extern]
+#[pg_extern(parallel_safe)]
 fn uuid_generate_v7(ts: pgrx::Timestamp) -> pgrx::Uuid {
     let u = Uuid::new_v7(Converter(ts).into());
     Converter(u).into()
 }
 
-#[pg_extern]
-fn uuid_get_timestamp(uuid: pgrx::Uuid) -> pgrx::Timestamp {
+#[pg_extern(immutable, parallel_safe)]
+fn uuid_to_timestamp(uuid: pgrx::Uuid) -> pgrx::Timestamp {
     let u: uuid::Uuid = Converter(uuid).into();
     let ts = u.get_timestamp().unwrap();
     Converter(ts).into()
@@ -39,7 +39,7 @@ mod tests {
     #[pg_test]
     fn test_pgx_uuidv7() {
         let pt000: pgrx::Timestamp = pgrx::Timestamp::new(2012, 3, 4, 5, 6, 7.123456789).unwrap();
-        let g: pgrx::Uuid = uuid_generate_v7(pt000);
+        let g: pgrx::Uuid = uuid_generate_v7(pt000); // <-- calling
         let u: uuid::Uuid = Converter(g).into();
         assert_eq!(7, u.get_version_num());
 
@@ -51,6 +51,10 @@ mod tests {
         assert_eq!(epoch, 1_330_837_567);
         // Uuid::new_v7 uses milliseconds, not nanoseconds the timestamp structure accepts.
         assert_eq!(nanoseconds, 123_000_000);
+
+        let pt001: pgrx::Timestamp = uuid_to_timestamp(g); // <-- calling
+        let pt002: pgrx::Timestamp = pgrx::Timestamp::new(2012, 3, 4, 5, 6, 7.123).unwrap();
+        assert_eq!(pt001, pt002);
     }
 }
 
