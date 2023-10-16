@@ -1,3 +1,5 @@
+use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{Datelike, Timelike};
 use pgrx::prelude::*;
 
 #[derive(Debug)]
@@ -38,15 +40,35 @@ impl From<Converter<pgrx::Timestamp>> for uuid::timestamp::Timestamp {
     }
 }
 
+impl From<Converter<uuid::timestamp::Timestamp>> for chrono::DateTime<Utc> {
+    fn from(value: Converter<uuid::timestamp::Timestamp>) -> Self {
+        let ts = value.unwrap();
+        let (epoch, nanoseconds) = ts.to_unix();
+        let naive_datetime = NaiveDateTime::from_timestamp_opt(epoch as i64, nanoseconds).unwrap();
+        DateTime::from_naive_utc_and_offset(naive_datetime, Utc)
+    }
+}
+
+impl From<Converter<chrono::DateTime<Utc>>> for pgrx::Timestamp {
+    fn from(w: Converter<chrono::DateTime<Utc>>) -> Self {
+        let dt = w.unwrap();
+        pgrx::Timestamp::new(
+            dt.year() as i32,
+            dt.month() as u8,
+            dt.day() as u8,
+            dt.hour() as u8,
+            dt.minute() as u8,
+            dt.second() as f64 + dt.nanosecond() as f64 / 1_000_000_000.0,
+        )
+        .unwrap()
+    }
+}
+
 impl From<Converter<uuid::timestamp::Timestamp>> for pgrx::Timestamp {
     fn from(w: Converter<uuid::timestamp::Timestamp>) -> Self {
         let ts = w.unwrap();
-        let (epoch, nanoseconds) = ts.to_unix();
-        // Postgres Epoch is from 2000-01-01 00:00:00
-        // refer: https://docs.rs/pgrx/0.10.2/pgrx/datum/struct.Timestamp.html#impl-From%3Ci64%3E-for-Timestamp
-        pgrx::datum::Timestamp::from(
-            epoch as i64 * 1_000_000 + (nanoseconds as f64 / 1_000.0).round() as i64,
-        )
+        let datetime: DateTime<Utc> = Converter(ts).into();
+        Converter(datetime).into()
     }
 }
 
@@ -100,8 +122,6 @@ mod tests {
             123_456_789,
         );
         let pt000: pgrx::Timestamp = Converter(ut000).into();
-        let pepoch: pgrx::pg_sys::Timestamp = pt000.into();
-        assert_eq!(pepoch, 1_330_837_567_123_457);
         assert_eq!(pt000.to_iso_string(), "2012-03-04T05:06:07.123457");
     }
 
