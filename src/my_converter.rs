@@ -42,7 +42,9 @@ impl From<Converter<uuid::timestamp::Timestamp>> for pgrx::Timestamp {
     fn from(w: Converter<uuid::timestamp::Timestamp>) -> Self {
         let ts = w.unwrap();
         let (epoch, nanoseconds) = ts.to_unix();
-        pgrx::datum::Timestamp::from(epoch as i64 * 1_000_000 + (nanoseconds as f64 / 1_000.0).round() as i64)
+        pgrx::datum::Timestamp::from(
+            epoch as i64 * 1_000_000 + (nanoseconds as f64 / 1_000.0).round() as i64,
+        )
     }
 }
 
