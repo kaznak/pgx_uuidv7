@@ -1,5 +1,4 @@
-use chrono::{DateTime, NaiveDateTime, Utc};
-use chrono::{Datelike, Timelike};
+use chrono::{DateTime, Datelike, NaiveDateTime, Timelike, Utc};
 use pgrx::prelude::*;
 
 #[derive(Debug)]
@@ -23,7 +22,7 @@ impl From<Converter<pgrx::Uuid>> for uuid::Uuid {
     }
 }
 
-impl From<Converter<pgrx::Timestamp>> for uuid::timestamp::Timestamp {
+impl From<Converter<pgrx::Timestamp>> for uuid::Timestamp {
     fn from(w: Converter<pgrx::Timestamp>) -> Self {
         let ts = w.unwrap();
         let epoch: u64 = ts
@@ -32,16 +31,12 @@ impl From<Converter<pgrx::Timestamp>> for uuid::timestamp::Timestamp {
             .try_into()
             .unwrap();
         let nanoseconds: u32 = (ts.second().fract() * 1_000_000_000.0) as u32;
-        uuid::timestamp::Timestamp::from_unix(
-            uuid::timestamp::context::NoContext,
-            epoch,
-            nanoseconds,
-        )
+        uuid::Timestamp::from_unix(uuid::timestamp::context::NoContext, epoch, nanoseconds)
     }
 }
 
-impl From<Converter<uuid::timestamp::Timestamp>> for chrono::DateTime<Utc> {
-    fn from(value: Converter<uuid::timestamp::Timestamp>) -> Self {
+impl From<Converter<uuid::Timestamp>> for chrono::DateTime<Utc> {
+    fn from(value: Converter<uuid::Timestamp>) -> Self {
         let ts = value.unwrap();
         let (epoch, nanoseconds) = ts.to_unix();
         let naive_datetime = NaiveDateTime::from_timestamp_opt(epoch as i64, nanoseconds).unwrap();
@@ -64,8 +59,8 @@ impl From<Converter<chrono::DateTime<Utc>>> for pgrx::Timestamp {
     }
 }
 
-impl From<Converter<uuid::timestamp::Timestamp>> for pgrx::Timestamp {
-    fn from(w: Converter<uuid::timestamp::Timestamp>) -> Self {
+impl From<Converter<uuid::Timestamp>> for pgrx::Timestamp {
+    fn from(w: Converter<uuid::Timestamp>) -> Self {
         let ts = w.unwrap();
         let datetime: DateTime<Utc> = Converter(ts).into();
         Converter(datetime).into()
@@ -104,7 +99,7 @@ mod tests {
 
     #[pg_test]
     fn timestamp001() {
-        let ut000: uuid::timestamp::Timestamp = uuid::timestamp::Timestamp::from_unix(
+        let ut000: uuid::Timestamp = uuid::Timestamp::from_unix(
             uuid::timestamp::context::NoContext,
             1_330_837_567,
             123_456_789,
@@ -116,7 +111,7 @@ mod tests {
 
     #[pg_test]
     fn timestamp002() {
-        let ut000: uuid::timestamp::Timestamp = uuid::timestamp::Timestamp::from_unix(
+        let ut000: uuid::Timestamp = uuid::Timestamp::from_unix(
             uuid::timestamp::context::NoContext,
             1_330_837_567,
             123_456_789,
@@ -128,7 +123,7 @@ mod tests {
     #[pg_test]
     fn timestamp003() {
         let pt000: pgrx::Timestamp = pgrx::Timestamp::new(2012, 3, 4, 5, 6, 7.123456789).unwrap();
-        let ut000: uuid::timestamp::Timestamp = Converter(pt000).into();
+        let ut000: uuid::Timestamp = Converter(pt000).into();
         let (epoch, nanoseconds) = ut000.to_unix();
         assert_eq!(epoch, 1_330_837_567);
         assert_eq!(nanoseconds, 123_457_000); // rounding up
