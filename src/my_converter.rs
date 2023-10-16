@@ -42,6 +42,8 @@ impl From<Converter<uuid::timestamp::Timestamp>> for pgrx::Timestamp {
     fn from(w: Converter<uuid::timestamp::Timestamp>) -> Self {
         let ts = w.unwrap();
         let (epoch, nanoseconds) = ts.to_unix();
+        // Postgres Epoch is from 2000-01-01 00:00:00
+        // refer: https://docs.rs/pgrx/0.10.2/pgrx/datum/struct.Timestamp.html#impl-From%3Ci64%3E-for-Timestamp
         pgrx::datum::Timestamp::from(
             epoch as i64 * 1_000_000 + (nanoseconds as f64 / 1_000.0).round() as i64,
         )
@@ -98,6 +100,8 @@ mod tests {
             123_456_789,
         );
         let pt000: pgrx::Timestamp = Converter(ut000).into();
+        let pepoch: pgrx::pg_sys::Timestamp = pt000.into();
+        assert_eq!(pepoch, 1_330_837_567_123_457);
         assert_eq!(pt000.to_iso_string(), "2012-03-04T05:06:07.123457");
     }
 
