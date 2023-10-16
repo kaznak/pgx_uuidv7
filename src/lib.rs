@@ -29,6 +29,25 @@ fn timestamp_to_uuid_random(ts: pgrx::Timestamp) -> pgrx::Uuid {
     uuid_generate_v7(ts)
 }
 
+// #[pg_extern(immutable, parallel_safe)]
+fn timestamp_to_uuid(ts: pgrx::Timestamp, rv: u32) -> pgrx::Uuid {
+    let ut: uuid::Timestamp = Converter(ts).into();
+    let (secs, nanos) = ut.to_unix();
+    let millis = (secs * 1000).saturating_add(nanos as u64 / 1_000_000);
+    let u: uuid::Uuid = uuid::Builder::from_unix_timestamp_millis(millis, rv.to_be_bytes()[..10].try_into().unwrap()).into_uuid();
+    Converter(u).into()
+}
+
+#[pg_extern(immutable, parallel_safe)]
+fn timestamp_to_uuid_min(ts: pgrx::Timestamp) -> pgrx::Uuid {
+    timestamp_to_uuid(ts, std::u32::MIN)
+}
+
+#[pg_extern(immutable, parallel_safe)]
+fn timestamp_to_uuid_max(ts: pgrx::Timestamp) -> pgrx::Uuid {
+    timestamp_to_uuid(ts, std::u32::MAX)
+}
+
 #[cfg(any(test, feature = "pg_test"))]
 #[pg_schema]
 mod tests {
