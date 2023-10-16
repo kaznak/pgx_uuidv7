@@ -11,18 +11,21 @@ impl<T> Converter<T> {
 }
 
 impl From<Converter<uuid::Uuid>> for pgrx::Uuid {
+    #[inline]
     fn from(w: Converter<uuid::Uuid>) -> Self {
         pgrx::Uuid::from_bytes(*w.unwrap().as_bytes())
     }
 }
 
 impl From<Converter<pgrx::Uuid>> for uuid::Uuid {
+    #[inline]
     fn from(w: Converter<pgrx::Uuid>) -> Self {
         uuid::Uuid::from_bytes(*w.unwrap().as_bytes())
     }
 }
 
 impl From<Converter<pgrx::Timestamp>> for uuid::Timestamp {
+    #[inline]
     fn from(w: Converter<pgrx::Timestamp>) -> Self {
         let ts = w.unwrap();
         let epoch: u64 = ts
@@ -36,6 +39,7 @@ impl From<Converter<pgrx::Timestamp>> for uuid::Timestamp {
 }
 
 impl From<Converter<uuid::Timestamp>> for chrono::DateTime<Utc> {
+    #[inline]
     fn from(value: Converter<uuid::Timestamp>) -> Self {
         let ts = value.unwrap();
         let (epoch, nanoseconds) = ts.to_unix();
@@ -45,6 +49,7 @@ impl From<Converter<uuid::Timestamp>> for chrono::DateTime<Utc> {
 }
 
 impl From<Converter<chrono::DateTime<Utc>>> for pgrx::Timestamp {
+    #[inline]
     fn from(w: Converter<chrono::DateTime<Utc>>) -> Self {
         let dt = w.unwrap();
         pgrx::Timestamp::new(
@@ -60,6 +65,7 @@ impl From<Converter<chrono::DateTime<Utc>>> for pgrx::Timestamp {
 }
 
 impl From<Converter<uuid::Timestamp>> for pgrx::Timestamp {
+    #[inline]
     fn from(w: Converter<uuid::Timestamp>) -> Self {
         let ts = w.unwrap();
         let datetime: DateTime<Utc> = Converter(ts).into();

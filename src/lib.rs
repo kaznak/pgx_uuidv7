@@ -40,12 +40,12 @@ fn timestamp_to_uuid(ts: pgrx::Timestamp, rv: u32) -> pgrx::Uuid {
 
 #[pg_extern(immutable, parallel_safe)]
 fn timestamp_to_uuid_min(ts: pgrx::Timestamp) -> pgrx::Uuid {
-    timestamp_to_uuid(ts, std::u32::MIN)
+    timestamp_to_uuid(ts, std::u32::MIN.into())
 }
 
 #[pg_extern(immutable, parallel_safe)]
 fn timestamp_to_uuid_max(ts: pgrx::Timestamp) -> pgrx::Uuid {
-    timestamp_to_uuid(ts, std::u32::MAX)
+    timestamp_to_uuid(ts, std::u32::MAX.into())
 }
 
 #[cfg(any(test, feature = "pg_test"))]
