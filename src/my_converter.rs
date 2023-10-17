@@ -24,10 +24,10 @@ impl From<Converter<pgrx::Uuid>> for uuid::Uuid {
     }
 }
 
-impl From<Converter<pgrx::Timestamp>> for uuid::Timestamp {
+impl From<Converter<pgrx::TimestampWithTimeZone>> for uuid::Timestamp {
     #[inline]
-    fn from(w: Converter<pgrx::Timestamp>) -> Self {
-        let ts = w.unwrap();
+    fn from(w: Converter<pgrx::TimestampWithTimeZone>) -> Self {
+        let ts = w.unwrap().to_utc();
         let epoch: u64 = ts
             .extract_part(DateTimeParts::Epoch)
             .unwrap()
@@ -48,23 +48,24 @@ impl From<Converter<uuid::Timestamp>> for chrono::DateTime<Utc> {
     }
 }
 
-impl From<Converter<chrono::DateTime<Utc>>> for pgrx::Timestamp {
+impl From<Converter<chrono::DateTime<Utc>>> for pgrx::TimestampWithTimeZone {
     #[inline]
     fn from(w: Converter<chrono::DateTime<Utc>>) -> Self {
         let dt = w.unwrap();
-        pgrx::Timestamp::new(
+        pgrx::TimestampWithTimeZone::with_timezone(
             dt.year() as i32,
             dt.month() as u8,
             dt.day() as u8,
             dt.hour() as u8,
             dt.minute() as u8,
             dt.second() as f64 + dt.nanosecond() as f64 / 1_000_000_000.0,
+            "UTC",
         )
         .unwrap()
     }
 }
 
-impl From<Converter<uuid::Timestamp>> for pgrx::Timestamp {
+impl From<Converter<uuid::Timestamp>> for pgrx::TimestampWithTimeZone {
     #[inline]
     fn from(w: Converter<uuid::Timestamp>) -> Self {
         // Using pgrx::datum::Timestamp::from does not work well.
@@ -76,7 +77,7 @@ impl From<Converter<uuid::Timestamp>> for pgrx::Timestamp {
     }
 }
 
-pub fn to_uuid_timestamp_buildpart(ts: pgrx::Timestamp) -> u64 {
+pub fn to_uuid_timestamp_buildpart(ts: pgrx::TimestampWithTimeZone) -> u64 {
     let ut: uuid::Timestamp = Converter(ts).into();
     let (secs, nanos) = ut.to_unix();
     let millis = (secs * 1000).saturating_add(nanos as u64 / 1_000_000);
@@ -132,16 +133,23 @@ mod tests {
             1_330_837_567,
             123_456_789,
         );
-        let pt000: pgrx::Timestamp = Converter(ut000).into();
-        assert_eq!(pt000.to_iso_string(), "2012-03-04T05:06:07.123457");
+        let pt000: pgrx::TimestampWithTimeZone = Converter(ut000).into();
+        // rounded up to microseconds
+        assert_eq!(
+            pt000.to_iso_string_with_timezone("UTC").unwrap(),
+            "2012-03-04T05:06:07.123457+00:00"
+        );
     }
 
     #[pg_test]
     fn timestamp003() {
-        let pt000: pgrx::Timestamp = pgrx::Timestamp::new(2012, 3, 4, 5, 6, 7.123456789).unwrap();
+        let pt000: pgrx::TimestampWithTimeZone =
+            pgrx::TimestampWithTimeZone::with_timezone(2012, 3, 4, 5, 6, 7.123456789, "UTC")
+                .unwrap();
         let ut000: uuid::Timestamp = Converter(pt000).into();
         let (epoch, nanoseconds) = ut000.to_unix();
         assert_eq!(epoch, 1_330_837_567);
-        assert_eq!(nanoseconds, 123_457_000); // rounding up
+        // rounded up to microseconds
+        assert_eq!(nanoseconds, 123_457_000);
     }
 }
