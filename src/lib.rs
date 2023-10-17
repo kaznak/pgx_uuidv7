@@ -1,6 +1,6 @@
 mod my_converter;
 
-use my_converter::Converter;
+use my_converter::{to_uuid_timestamp_buildpart, Converter};
 use pgrx::prelude::*;
 use uuid::Uuid;
 
@@ -31,10 +31,11 @@ fn timestamp_to_uuid_random(ts: pgrx::Timestamp) -> pgrx::Uuid {
 
 // #[pg_extern(immutable, parallel_safe)]
 fn timestamp_to_uuid(ts: pgrx::Timestamp, rv: u32) -> pgrx::Uuid {
-    let ut: uuid::Timestamp = Converter(ts).into();
-    let (secs, nanos) = ut.to_unix();
-    let millis = (secs * 1000).saturating_add(nanos as u64 / 1_000_000);
-    let u: uuid::Uuid = uuid::Builder::from_unix_timestamp_millis(millis, rv.to_be_bytes()[..10].try_into().unwrap()).into_uuid();
+    let u: uuid::Uuid = uuid::Builder::from_unix_timestamp_millis(
+        to_uuid_timestamp_buildpart(ts),
+        rv.to_be_bytes()[..10].try_into().unwrap(),
+    )
+    .into_uuid();
     Converter(u).into()
 }
 

@@ -67,10 +67,20 @@ impl From<Converter<chrono::DateTime<Utc>>> for pgrx::Timestamp {
 impl From<Converter<uuid::Timestamp>> for pgrx::Timestamp {
     #[inline]
     fn from(w: Converter<uuid::Timestamp>) -> Self {
+        // Using pgrx::datum::Timestamp::from does not work well.
+        // because Postgres Epoch is from 2000-01-01 00:00:00 UTC.
+        // refer: https://docs.rs/pgrx/0.10.2/pgrx/datum/struct.Timestamp.html#impl-From%3Ci64%3E-for-Timestamp
         let ts = w.unwrap();
         let datetime: DateTime<Utc> = Converter(ts).into();
         Converter(datetime).into()
     }
+}
+
+pub fn to_uuid_timestamp_buildpart(ts: pgrx::Timestamp) -> u64 {
+    let ut: uuid::Timestamp = Converter(ts).into();
+    let (secs, nanos) = ut.to_unix();
+    let millis = (secs * 1000).saturating_add(nanos as u64 / 1_000_000);
+    millis
 }
 
 #[cfg(any(test, feature = "pg_test"))]
