@@ -145,8 +145,8 @@ mod tests {
     }
 
     #[pg_test]
-    fn test_sql0() {
-        let result = Spi::get_one::<String>(
+    fn test_sql() {
+        Spi::run(
             "
             CREATE TABLE foo (
                 id uuid,
@@ -168,52 +168,33 @@ mod tests {
             );
 
             INSERT INTO bar (foo_id) SELECT id FROM foo;
+            ",
+        ).unwrap();
 
+        // join and equal
+        let ret0 = Spi::get_one::<String>(
+            "
             SELECT data
             FROM bar
             JOIN foo ON bar.foo_id = foo.id
             WHERE foo.id::timestamptz = '2012-03-04T05:06:07.123+00:00';
             ",
         ).unwrap();
-        assert!(result.is_some());
-        assert!(result.unwrap() == "a");
-    }
+        assert!(ret0.is_some());
+        assert!(ret0.unwrap() == "a");
 
-    #[pg_test]
-    fn test_sql1() {
-        let result = Spi::get_one::<String>(
+        // join and less than
+        let ret1 = Spi::get_one::<String>(
             "
-            CREATE TABLE foo (
-                id uuid,
-                data TEXT
-            );
-
-            CREATE TABLE bar (
-                id uuid default uuid_generate_v7_now(),
-                foo_id uuid
-            );
-
-            INSERT INTO foo
-            values (
-                uuid_generate_v7('2012-03-04T05:06:07.123456789+00:00'),
-                'a'
-            ), (
-                uuid_generate_v7('2001-12-03T04:05:06.123456789+00:00'),
-                'b'
-            );
-
-            INSERT INTO bar (foo_id) SELECT id FROM foo;
-
             SELECT data
             FROM bar
             JOIN foo ON bar.foo_id = foo.id
             WHERE foo.id::timestamptz < '2012-03-04T05:06:07.123+00:00';
             ",
         ).unwrap();
-        assert!(result.is_some());
-        assert!(result.unwrap() == "b");
+        assert!(ret1.is_some());
+        assert!(ret1.unwrap() == "b");
     }
-
 }
 
 /// This module is required by `cargo pgrx test` invocations.
