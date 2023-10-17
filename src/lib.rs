@@ -18,19 +18,21 @@ fn uuid_generate_v7(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
 }
 
 #[pg_extern(immutable, parallel_safe)]
-fn uuid_to_timestamp(uuid: pgrx::Uuid) -> pgrx::TimestampWithTimeZone {
+fn uuid_to_timestamp(uuid: pgrx::Uuid) -> Option<pgrx::TimestampWithTimeZone> {
     let u: uuid::Uuid = Converter(uuid).into();
-    let ts = u.get_timestamp().unwrap();
-    Converter(ts).into()
+    match u.get_timestamp() {
+        Some(ts) => Some(Converter(ts).into()),
+        None => None,
+    }
 }
 
 #[pg_extern(parallel_safe)]
-fn timestamp_to_uuid_random(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
+fn timestamp_to_uuid_v7_random(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
     uuid_generate_v7(ts)
 }
 
 // #[pg_extern(immutable, parallel_safe)] // TODO make this public
-fn timestamp_to_uuid(ts: pgrx::TimestampWithTimeZone, rv: u32) -> pgrx::Uuid {
+fn timestamp_to_uuid_v7(ts: pgrx::TimestampWithTimeZone, rv: u32) -> pgrx::Uuid {
     let u: uuid::Uuid = uuid::Builder::from_unix_timestamp_millis(
         to_uuid_timestamp_buildpart(ts),
         rv.to_be_bytes()[..10].try_into().unwrap(),
@@ -40,13 +42,13 @@ fn timestamp_to_uuid(ts: pgrx::TimestampWithTimeZone, rv: u32) -> pgrx::Uuid {
 }
 
 #[pg_extern(immutable, parallel_safe)]
-fn timestamp_to_uuid_min(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
-    timestamp_to_uuid(ts, std::u32::MIN.into())
+fn timestamp_to_uuid_v7_min(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
+    timestamp_to_uuid_v7(ts, std::u32::MIN.into())
 }
 
 #[pg_extern(immutable, parallel_safe)]
-fn timestamp_to_uuid_max(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
-    timestamp_to_uuid(ts, std::u32::MAX.into())
+fn timestamp_to_uuid_v7_max(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
+    timestamp_to_uuid_v7(ts, std::u32::MAX.into())
 }
 
 #[cfg(any(test, feature = "pg_test"))]
@@ -79,7 +81,7 @@ mod tests {
         // Uuid::new_v7 uses milliseconds, not nanoseconds the timestamp structure accepts.
         assert_eq!(nanoseconds, 123_000_000);
 
-        let pt001: pgrx::TimestampWithTimeZone = uuid_to_timestamp(g); // <-- calling
+        let pt001: pgrx::TimestampWithTimeZone = uuid_to_timestamp(g).unwrap(); // <-- calling
         let pt002: pgrx::TimestampWithTimeZone =
             pgrx::TimestampWithTimeZone::with_timezone(2012, 3, 4, 5, 6, 7.123, "UTC").unwrap();
         assert_eq!(pt001, pt002);
