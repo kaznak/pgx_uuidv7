@@ -85,8 +85,6 @@ mod tests {
         let ut000: uuid::Timestamp = u.get_timestamp().unwrap();
         let (epoch, nanoseconds) = ut000.to_unix();
 
-        let _millis = (epoch * 1000).saturating_add(nanoseconds as u64 / 1_000_000);
-
         assert_eq!(epoch, 1_330_837_567);
         // Uuid::new_v7 uses milliseconds, not nanoseconds the timestamp structure accepts.
         assert_eq!(nanoseconds, 123_000_000);
@@ -123,8 +121,99 @@ mod tests {
         assert!(u_min <= u_rnd);
         assert!(u_rnd <= u_max);
     }
-    /*
-     */
+
+    #[pg_test]
+    fn test_generate_now() {
+        let result = Spi::get_one::<pgrx::Uuid>("SELECT uuid_generate_v7_now();").unwrap();
+        assert!(result.is_some());
+        let u: uuid::Uuid = Converter(result.unwrap()).into();
+        assert_eq!(7, u.get_version_num());
+    }
+
+    #[pg_test]
+    fn test_generate_new() {
+        let result = Spi::get_one::<pgrx::Uuid>("SELECT uuid_generate_v7('2012-03-04T05:06:07.123456789+00:00');").unwrap();
+        assert!(result.is_some());
+        let pu = result.unwrap();
+        let u: uuid::Uuid = Converter(pu).into();
+        assert_eq!(7, u.get_version_num());
+        let ut000: uuid::Timestamp = u.get_timestamp().unwrap();
+        let (epoch, nanoseconds) = ut000.to_unix();
+        assert_eq!(epoch, 1_330_837_567);
+        // Uuid::new_v7 uses milliseconds, not nanoseconds the timestamp structure accepts.
+        assert_eq!(nanoseconds, 123_000_000);
+    }
+
+    #[pg_test]
+    fn test_sql0() {
+        let result = Spi::get_one::<String>(
+            "
+            CREATE TABLE foo (
+                id uuid,
+                data TEXT
+            );
+
+            CREATE TABLE bar (
+                id uuid default uuid_generate_v7_now(),
+                foo_id uuid
+            );
+
+            INSERT INTO foo
+            values (
+                uuid_generate_v7('2012-03-04T05:06:07.123456789+00:00'),
+                'a'
+            ), (
+                uuid_generate_v7('2001-12-03T04:05:06.123456789+00:00'),
+                'b'
+            );
+
+            INSERT INTO bar (foo_id) SELECT id FROM foo;
+
+            SELECT data
+            FROM bar
+            JOIN foo ON bar.foo_id = foo.id
+            WHERE foo.id::timestamptz = '2012-03-04T05:06:07.123+00:00';
+            ",
+        ).unwrap();
+        assert!(result.is_some());
+        assert!(result.unwrap() == "a");
+    }
+
+    #[pg_test]
+    fn test_sql1() {
+        let result = Spi::get_one::<String>(
+            "
+            CREATE TABLE foo (
+                id uuid,
+                data TEXT
+            );
+
+            CREATE TABLE bar (
+                id uuid default uuid_generate_v7_now(),
+                foo_id uuid
+            );
+
+            INSERT INTO foo
+            values (
+                uuid_generate_v7('2012-03-04T05:06:07.123456789+00:00'),
+                'a'
+            ), (
+                uuid_generate_v7('2001-12-03T04:05:06.123456789+00:00'),
+                'b'
+            );
+
+            INSERT INTO bar (foo_id) SELECT id FROM foo;
+
+            SELECT data
+            FROM bar
+            JOIN foo ON bar.foo_id = foo.id
+            WHERE foo.id::timestamptz < '2012-03-04T05:06:07.123+00:00';
+            ",
+        ).unwrap();
+        assert!(result.is_some());
+        assert!(result.unwrap() == "b");
+    }
+
 }
 
 /// This module is required by `cargo pgrx test` invocations.
