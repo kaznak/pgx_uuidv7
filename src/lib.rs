@@ -52,7 +52,7 @@ fn timestamptz_to_uuid_v7_max(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
 }
 
 extension_sql!(
-r#"
+    r#"
 CREATE CAST (uuid AS timestamptz) WITH FUNCTION uuid_to_timestamptz(uuid) AS IMPLICIT;
 -- timestamptz to uuid is ambiguous, so I don't create it.
 "#,
