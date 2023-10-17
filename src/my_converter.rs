@@ -92,10 +92,12 @@ mod tests {
 
     #[pg_test]
     fn uuid000() {
-        let u: uuid::Uuid = uuid::uuid!("00000000-0000-0000-0000-ffff00000000");
-        let p: pgrx::Uuid = Converter(u).into();
-        let u2: uuid::Uuid = Converter(p).into();
-        assert_eq!(u, u2);
+        let u0: uuid::Uuid = uuid::uuid!("00000000-0000-0000-0000-ffff00000000");
+        let p0: pgrx::Uuid = Converter(u0).into();
+        let u1: uuid::Uuid = Converter(p0).into();
+        let p1: pgrx::Uuid = Converter(u1).into();
+        assert_eq!(u0, u1);
+        assert_eq!(p0, p1);
     }
 
     #[pg_test]
