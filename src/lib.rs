@@ -29,7 +29,7 @@ fn timestamp_to_uuid_random(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
     uuid_generate_v7(ts)
 }
 
-// #[pg_extern(immutable, parallel_safe)]
+// #[pg_extern(immutable, parallel_safe)] // TODO make this public
 fn timestamp_to_uuid(ts: pgrx::TimestampWithTimeZone, rv: u32) -> pgrx::Uuid {
     let u: uuid::Uuid = uuid::Builder::from_unix_timestamp_millis(
         to_uuid_timestamp_buildpart(ts),
