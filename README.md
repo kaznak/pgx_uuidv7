@@ -3,7 +3,6 @@
 An extension for PostgreSQL that implements UUIDv7
 with several feature of pgx_ulid.
 
-
 ## References
 
 - [pgrx v0.11.0](https://github.com/pgcentralfoundation/pgrx)([docs](https://docs.rs/pgrx/0.11.0/pgrx/index.html))
