@@ -102,6 +102,7 @@ jobs:
       - name: Upload artifacts
         uses: ncipollo/release-action@v1
         with:
+          token: ${{ secrets.PAT_FOR_RELEASE }}
           draft: true
           artifacts: ./${{ env.PKG_NAME }}-${{ matrix.postgres }}-${{ matrix.box.arch }}-linux-gnu.deb
           artifactContentType: application/vnd.debian.binary-package
