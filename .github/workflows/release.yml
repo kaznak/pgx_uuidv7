@@ -2,6 +2,7 @@ env:
   NAME: pgx_uuidv7
   EXT_NAME: uuidv7
   PKG_NAME: pg-uuidv7
+  PGRX_VERSION: 0.11.0
 name: Release
 on:
   push:
@@ -48,7 +49,7 @@ jobs:
           # Ensure installed pg_config is first on path
           export PATH=$PATH:/usr/lib/postgresql/${{ matrix.postgres }}/bin
 
-          cargo install cargo-pgrx --version 0.10.2 --locked
+          cargo install cargo-pgrx --version ${{ env.PGRX_VERSION }} --locked
           cargo pgrx init --pg${{ matrix.postgres }}=/usr/lib/postgresql/${{ matrix.postgres }}/bin/pg_config
       - name: Build artifacts
         run: |
