@@ -20,3 +20,12 @@ IDE setup:
 
 - [Rust in Visual Studio Code](https://code.visualstudio.com/docs/languages/rust)
 - [Rust での開発を便利にする VSCode 拡張機能たち](https://zenn.dev/t4aru/articles/4a77ec07432e57)
+
+## Memo
+
+### Build commands
+
+```bash
+PG_VERSION=16 # set postgresql major version
+cargo pgrx package --no-default-features --features pg$PG_VERSION --pg-config $(ls ~/.pgrx/$PG_VERSION.*/pgrx-install/bin/pg_config 2>/dev/null | tail -n1)
+```
