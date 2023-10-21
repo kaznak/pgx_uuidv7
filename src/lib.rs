@@ -13,6 +13,15 @@ fn uuid_generate_v7_now() -> pgrx::Uuid {
     Converter(Uuid::now_v7()).into()
 }
 
+extension_sql!(
+    r#"
+COMMENT ON FUNCTION "uuid_generate_v7_now"()
+IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the current time.';
+"#,
+    name = "comment_uuid_generate_v7_now",
+    requires = [uuid_generate_v7_now],
+);
+
 /// Generate and return a new UUID using the v7 algorithm.
 /// The timestamp is the given timestamp.
 #[pg_extern(parallel_safe)]
@@ -32,6 +41,15 @@ fn uuid_to_timestamptz(uuid: pgrx::Uuid) -> Option<pgrx::TimestampWithTimeZone> 
         None => None,
     }
 }
+
+extension_sql!(
+    r#"
+COMMENT ON FUNCTION "uuid_generate_v7_now"()
+IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the given timestamp.';
+"#,
+    name = "comment_uuid_to_timestamptz",
+    requires = [uuid_to_timestamptz],
+);
 
 /// Generate and return a new UUID using the v7 algorithm.
 /// The timestamp is the given timestamp.
