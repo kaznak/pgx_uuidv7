@@ -30,6 +30,15 @@ fn uuid_generate_v7(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
     Converter(u).into()
 }
 
+extension_sql!(
+    r#"
+COMMENT ON FUNCTION "uuid_generate_v7"(timestamptz)
+IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the given timestamp.';
+"#,
+    name = "comment_uuid_generate_v7",
+    requires = [uuid_generate_v7],
+);
+
 /// Convert a UUID to a timestamptz.
 /// The timestamp is the timestamp encoded in the UUID.
 /// The timezone is UTC.
@@ -44,8 +53,8 @@ fn uuid_to_timestamptz(uuid: pgrx::Uuid) -> Option<pgrx::TimestampWithTimeZone> 
 
 extension_sql!(
     r#"
-COMMENT ON FUNCTION "uuid_generate_v7_now"()
-IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the given timestamp.';
+COMMENT ON FUNCTION "uuid_to_timestamptz"(uuid)
+IS 'Convert a UUID to a timestamptz. The timestamp is the timestamp encoded in the UUID. The timezone is UTC.';
 "#,
     name = "comment_uuid_to_timestamptz",
     requires = [uuid_to_timestamptz],
@@ -58,6 +67,15 @@ IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the 
 fn timestamptz_to_uuid_v7_random(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
     uuid_generate_v7(ts)
 }
+
+extension_sql!(
+    r#"
+COMMENT ON FUNCTION "timestamptz_to_uuid_v7_random"(timestamptz)
+IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the given timestamp. This function is a wrapper around `uuid_generate_v7`.';
+"#,
+    name = "comment_timestamptz_to_uuid_v7_random",
+    requires = [timestamptz_to_uuid_v7_random],
+);
 
 #[inline]
 fn _timestamptz_to_uuid_v7(ts: pgrx::TimestampWithTimeZone, rv: &[u8; 10]) -> pgrx::Uuid {
@@ -75,6 +93,15 @@ fn timestamptz_to_uuid_v7_min(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
     _timestamptz_to_uuid_v7(ts, &rv)
 }
 
+extension_sql!(
+    r#"
+COMMENT ON FUNCTION "timestamptz_to_uuid_v7_min"(timestamptz)
+IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the given timestamp. The UUID is the minimum UUID that can be generated for the given timestamp.';
+"#,
+    name = "comment_timestamptz_to_uuid_v7_min",
+    requires = [timestamptz_to_uuid_v7_min],
+);
+
 /// Generate and return a new UUID using the v7 algorithm.
 /// The timestamp is the given timestamp.
 /// The UUID is the maximum UUID that can be generated for the given timestamp.
@@ -86,10 +113,20 @@ fn timestamptz_to_uuid_v7_max(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
 
 extension_sql!(
     r#"
+COMMENT ON FUNCTION "timestamptz_to_uuid_v7_max"(timestamptz)
+IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the given timestamp. The UUID is the maximum UUID that can be generated for the given timestamp.';
+"#,
+    name = "comment_timestamptz_to_uuid_v7_max",
+    requires = [timestamptz_to_uuid_v7_max],
+);
+
+extension_sql!(
+    r#"
 CREATE CAST (uuid AS timestamptz) WITH FUNCTION uuid_to_timestamptz(uuid) AS IMPLICIT;
 -- timestamptz to uuid is ambiguous, so I don't create it.
 "#,
-    name = "uuid_casts"
+    name = "uuid_casts",
+    requires = [uuid_to_timestamptz],
 );
 
 #[cfg(any(test, feature = "pg_test"))]
