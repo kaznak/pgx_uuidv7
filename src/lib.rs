@@ -31,24 +31,23 @@ fn timestamptz_to_uuid_v7_random(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid 
     uuid_generate_v7(ts)
 }
 
-// #[pg_extern(immutable, parallel_safe)] // TODO make this public
-fn timestamptz_to_uuid_v7(ts: pgrx::TimestampWithTimeZone, rv: u128) -> pgrx::Uuid {
-    let u: uuid::Uuid = uuid::Builder::from_unix_timestamp_millis(
-        to_uuid_timestamp_buildpart(ts),
-        rv.to_be_bytes()[..10].try_into().unwrap(),
-    )
-    .into_uuid();
+#[inline]
+fn _timestamptz_to_uuid_v7(ts: pgrx::TimestampWithTimeZone, rv: &[u8; 10]) -> pgrx::Uuid {
+    let u: uuid::Uuid =
+        uuid::Builder::from_unix_timestamp_millis(to_uuid_timestamp_buildpart(ts), rv).into_uuid();
     Converter(u).into()
 }
 
 #[pg_extern(immutable, parallel_safe)]
 fn timestamptz_to_uuid_v7_min(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
-    timestamptz_to_uuid_v7(ts, std::u128::MIN)
+    let rv = [0x0 as u8; 10];
+    _timestamptz_to_uuid_v7(ts, &rv)
 }
 
 #[pg_extern(immutable, parallel_safe)]
 fn timestamptz_to_uuid_v7_max(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
-    timestamptz_to_uuid_v7(ts, std::u128::MAX)
+    let rv = [0xff as u8; 10];
+    _timestamptz_to_uuid_v7(ts, &rv)
 }
 
 extension_sql!(
@@ -132,7 +131,10 @@ mod tests {
 
     #[pg_test]
     fn test_generate_new() {
-        let result = Spi::get_one::<pgrx::Uuid>("SELECT uuid_generate_v7('2012-03-04T05:06:07.123456789+00:00');").unwrap();
+        let result = Spi::get_one::<pgrx::Uuid>(
+            "SELECT uuid_generate_v7('2012-03-04T05:06:07.123456789+00:00');",
+        )
+        .unwrap();
         assert!(result.is_some());
         let pu = result.unwrap();
         let u: uuid::Uuid = Converter(pu).into();
@@ -169,7 +171,8 @@ mod tests {
 
             INSERT INTO bar (foo_id) SELECT id FROM foo;
             ",
-        ).unwrap();
+        )
+        .unwrap();
 
         // join and equal
         let ret0 = Spi::get_one::<String>(
@@ -179,7 +182,8 @@ mod tests {
             JOIN foo ON bar.foo_id = foo.id
             WHERE foo.id::timestamptz = '2012-03-04T05:06:07.123+00:00';
             ",
-        ).unwrap();
+        )
+        .unwrap();
         assert!(ret0.is_some());
         assert!(ret0.unwrap() == "a");
 
@@ -191,7 +195,8 @@ mod tests {
             JOIN foo ON bar.foo_id = foo.id
             WHERE foo.id::timestamptz < '2012-03-04T05:06:07.123+00:00';
             ",
-        ).unwrap();
+        )
+        .unwrap();
         assert!(ret1.is_some());
         assert!(ret1.unwrap() == "b");
     }
