@@ -251,7 +251,8 @@ mod tests {
                     "
                 SELECT data
                 FROM bar
-                JOIN foo ON bar.foo_id = foo.id;
+                JOIN foo ON bar.foo_id = foo.id
+                ORDER BY data;
                         ",
                     None,
                     None,
@@ -261,7 +262,10 @@ mod tests {
                 .collect::<Vec<_>>()
         });
         assert!(ret0.len() == 2);
-        assert!(ret0.into_iter().all(|x| x.is_some()));
+        assert!(ret0[0].is_some());
+        assert!(ret0[0].as_ref().unwrap() == "a");
+        assert!(ret0[1].is_some());
+        assert!(ret0[1].as_ref().unwrap() == "b");
 
         // join and equal
         let ret1 = Spi::connect(|client| {
