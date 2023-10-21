@@ -2,7 +2,7 @@
 name = "pgx_uuidv7"
 version = "0.0.0"
 edition = "2021"
-description = "A Postgres extension to generate v7 UUIDs"
+description = "A Postgres extension to generate and cast v7 UUIDs"
 license = "MIT"
 readme = "README.md"
 
