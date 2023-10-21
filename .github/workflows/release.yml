@@ -103,3 +103,4 @@ jobs:
           draft: true
           artifacts: ./${{ env.PKG_NAME }}-${{ matrix.postgres }}-${{ matrix.box.arch }}-linux-gnu.deb
           artifactContentType: application/vnd.debian.binary-package
+          bodyFile: ./RELEASE_NOTE.md
