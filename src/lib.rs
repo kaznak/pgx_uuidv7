@@ -245,8 +245,25 @@ mod tests {
         )
         .unwrap();
 
+        assert!(
+            Spi::connect(|client| {
+                client
+                    .select(
+                        "
+                SELECT data
+                FROM bar
+                JOIN foo ON bar.foo_id = foo.id;
+                        ",
+                        None,
+                        None,
+                    )
+                    .unwrap()
+                    .len()
+            }) == 2
+        );
+
         // join and equal
-        let ret0 = Spi::get_one::<String>(
+        let ret1 = Spi::get_one::<String>(
             "
             SELECT data
             FROM bar
@@ -255,11 +272,11 @@ mod tests {
             ",
         )
         .unwrap();
-        assert!(ret0.is_some());
-        assert!(ret0.unwrap() == "a");
+        assert!(ret1.is_some());
+        assert!(ret1.unwrap() == "a");
 
         // join and less than
-        let ret1 = Spi::get_one::<String>(
+        let ret2 = Spi::get_one::<String>(
             "
             SELECT data
             FROM bar
@@ -268,8 +285,8 @@ mod tests {
             ",
         )
         .unwrap();
-        assert!(ret1.is_some());
-        assert!(ret1.unwrap() == "b");
+        assert!(ret2.is_some());
+        assert!(ret2.unwrap() == "b");
     }
 }
 
