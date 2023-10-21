@@ -245,48 +245,65 @@ mod tests {
         )
         .unwrap();
 
-        assert!(
-            Spi::connect(|client| {
-                client
-                    .select(
-                        "
+        let ret0 = Spi::connect(|client| {
+            client
+                .select(
+                    "
                 SELECT data
                 FROM bar
                 JOIN foo ON bar.foo_id = foo.id;
                         ",
-                        None,
-                        None,
-                    )
-                    .unwrap()
-                    .len()
-            }) == 2
-        );
+                    None,
+                    None,
+                )
+                .unwrap()
+                .map(|row| (row["data"].value::<String>().unwrap()))
+                .collect::<Vec<_>>()
+        });
+        assert!(ret0.len() == 2);
+        assert!(ret0.into_iter().all(|x| x.is_some()));
 
         // join and equal
-        let ret1 = Spi::get_one::<String>(
-            "
-            SELECT data
-            FROM bar
-            JOIN foo ON bar.foo_id = foo.id
-            WHERE foo.id::timestamptz = '2012-03-04T05:06:07.123+00:00';
-            ",
-        )
-        .unwrap();
-        assert!(ret1.is_some());
-        assert!(ret1.unwrap() == "a");
+        let ret1 = Spi::connect(|client| {
+            client
+                .select(
+                    "
+                    SELECT data
+                    FROM bar
+                    JOIN foo ON bar.foo_id = foo.id
+                    WHERE foo.id::timestamptz = '2012-03-04T05:06:07.123+00:00';
+                    ",
+                    None,
+                    None,
+                )
+                .unwrap()
+                .map(|row| (row["data"].value::<String>().unwrap()))
+                .collect::<Vec<_>>()
+        });
+        assert!(ret1.len() == 1);
+        assert!(ret1[0].is_some());
+        assert!(ret1[0].as_ref().unwrap() == "a");
 
         // join and less than
-        let ret2 = Spi::get_one::<String>(
-            "
-            SELECT data
-            FROM bar
-            JOIN foo ON bar.foo_id = foo.id
-            WHERE foo.id::timestamptz < '2012-03-04T05:06:07.123+00:00';
-            ",
-        )
-        .unwrap();
-        assert!(ret2.is_some());
-        assert!(ret2.unwrap() == "b");
+        let ret2 = Spi::connect(|client| {
+            client
+                .select(
+                    "
+                    SELECT data
+                    FROM bar
+                    JOIN foo ON bar.foo_id = foo.id
+                    WHERE foo.id::timestamptz < '2012-03-04T05:06:07.123+00:00';
+                    ",
+                    None,
+                    None,
+                )
+                .unwrap()
+                .map(|row| (row["data"].value::<String>().unwrap()))
+                .collect::<Vec<_>>()
+        });
+        assert!(ret2.len() == 1);
+        assert!(ret2[0].is_some());
+        assert!(ret2[0].as_ref().unwrap() == "b");
     }
 }
 
