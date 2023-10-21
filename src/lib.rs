@@ -6,17 +6,23 @@ use uuid::Uuid;
 
 pgrx::pg_module_magic!();
 
+/// Generate and return a new UUID using the v7 algorithm.
+/// The timestamp is the current time.
 #[pg_extern(parallel_safe)]
 fn uuid_generate_v7_now() -> pgrx::Uuid {
     Converter(Uuid::now_v7()).into()
 }
 
+/// Generate and return a new UUID using the v7 algorithm.
+/// The timestamp is the given timestamp.
 #[pg_extern(parallel_safe)]
 fn uuid_generate_v7(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
     let u = Uuid::new_v7(Converter(ts).into());
     Converter(u).into()
 }
 
+/// Convert a UUID to a timestamptz.
+/// The timestamp is the timestamp encoded in the UUID.
 #[pg_extern(immutable, parallel_safe)]
 fn uuid_to_timestamptz(uuid: pgrx::Uuid) -> Option<pgrx::TimestampWithTimeZone> {
     let u: uuid::Uuid = Converter(uuid).into();
@@ -26,6 +32,8 @@ fn uuid_to_timestamptz(uuid: pgrx::Uuid) -> Option<pgrx::TimestampWithTimeZone> 
     }
 }
 
+/// Generate and return a new UUID using the v7 algorithm.
+/// The timestamp is the given timestamp.
 #[pg_extern(parallel_safe)]
 fn timestamptz_to_uuid_v7_random(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
     uuid_generate_v7(ts)
@@ -38,12 +46,18 @@ fn _timestamptz_to_uuid_v7(ts: pgrx::TimestampWithTimeZone, rv: &[u8; 10]) -> pg
     Converter(u).into()
 }
 
+/// Generate and return a new UUID using the v7 algorithm.
+/// The timestamp is the given timestamp.
+/// The UUID is the minimum UUID that can be generated for the given timestamp.
 #[pg_extern(immutable, parallel_safe)]
 fn timestamptz_to_uuid_v7_min(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
     let rv = [0x0 as u8; 10];
     _timestamptz_to_uuid_v7(ts, &rv)
 }
 
+/// Generate and return a new UUID using the v7 algorithm.
+/// The timestamp is the given timestamp.
+/// The UUID is the maximum UUID that can be generated for the given timestamp.
 #[pg_extern(immutable, parallel_safe)]
 fn timestamptz_to_uuid_v7_max(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
     let rv = [0xff as u8; 10];
