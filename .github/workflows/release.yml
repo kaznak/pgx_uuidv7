@@ -1,7 +1,6 @@
 env:
-  NAME: pgx_uuidv7
   EXT_NAME: pgx_uuidv7
-  PKG_NAME: pgx-uuidv7
+  PKG_NAME: pgx_uuidv7
   PGRX_VERSION: 0.11.0
 name: Release
 on:
@@ -23,8 +22,6 @@ jobs:
         box:
           - runner: ubuntu-22.04
             arch: amd64
-          # - runner: buildjet-8vcpu-ubuntu-2204-arm
-          #   arch: arm64
     runs-on: ${{ matrix.box.runner }}
     timeout-minutes: 45
     steps:
@@ -102,7 +99,7 @@ jobs:
       - name: Upload artifacts
         uses: ncipollo/release-action@v1
         with:
-          token: ${{ secrets.PAT_FOR_RELEASE }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
           artifacts: ./${{ env.PKG_NAME }}-${{ matrix.postgres }}-${{ matrix.box.arch }}-linux-gnu.deb
           artifactContentType: application/vnd.debian.binary-package
