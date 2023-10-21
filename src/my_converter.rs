@@ -5,6 +5,7 @@ use pgrx::prelude::*;
 pub(crate) struct Converter<T>(pub T);
 
 impl<T> Converter<T> {
+    #[inline]
     fn unwrap(self) -> T {
         self.0
     }
@@ -77,6 +78,7 @@ impl From<Converter<uuid::Timestamp>> for pgrx::TimestampWithTimeZone {
     }
 }
 
+#[inline]
 pub fn to_uuid_timestamp_buildpart(ts: pgrx::TimestampWithTimeZone) -> u64 {
     let ut: uuid::Timestamp = Converter(ts).into();
     let (secs, nanos) = ut.to_unix();
