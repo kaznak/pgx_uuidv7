@@ -23,6 +23,7 @@ fn uuid_generate_v7(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
 
 /// Convert a UUID to a timestamptz.
 /// The timestamp is the timestamp encoded in the UUID.
+/// The timezone is UTC.
 #[pg_extern(immutable, parallel_safe)]
 fn uuid_to_timestamptz(uuid: pgrx::Uuid) -> Option<pgrx::TimestampWithTimeZone> {
     let u: uuid::Uuid = Converter(uuid).into();
@@ -34,6 +35,7 @@ fn uuid_to_timestamptz(uuid: pgrx::Uuid) -> Option<pgrx::TimestampWithTimeZone> 
 
 /// Generate and return a new UUID using the v7 algorithm.
 /// The timestamp is the given timestamp.
+/// This function is a wrapper around `uuid_generate_v7`.
 #[pg_extern(parallel_safe)]
 fn timestamptz_to_uuid_v7_random(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
     uuid_generate_v7(ts)
