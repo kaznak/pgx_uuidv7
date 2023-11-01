@@ -6,6 +6,23 @@ use uuid::Uuid;
 
 pgrx::pg_module_magic!();
 
+/// Return the version of given uuid.
+#[pg_extern(parallel_safe)]
+fn uuid_get_version(uuid: pgrx::Uuid) -> i8 {
+    let u: uuid::Uuid = Converter(uuid).into();
+    let v = u.get_version_num();
+    v as i8
+}
+
+extension_sql!(
+    r#"
+COMMENT ON FUNCTION "uuid_get_version"(uuid)
+IS 'Return the version of given uuid.';
+"#,
+    name = "comment_uuid_get_version",
+    requires = [uuid_get_version],
+);
+
 /// Generate and return a new UUID using the v7 algorithm.
 /// The timestamp is the current time.
 #[pg_extern(parallel_safe)]
@@ -139,6 +156,9 @@ mod tests {
         let g = uuid_generate_v7_now();
         let u: uuid::Uuid = Converter(g).into();
         assert_eq!(7, u.get_version_num());
+
+        let v = uuid_get_version(g);
+        assert_eq!(7, v);
     }
 
     fn gen_pt() -> pgrx::TimestampWithTimeZone {
