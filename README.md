@@ -91,3 +91,7 @@ Thank you.
 PG_VERSION=16 # set postgresql major version
 cargo pgrx package --no-default-features --features pg$PG_VERSION --pg-config $(ls ~/.pgrx/$PG_VERSION.*/pgrx-install/bin/pg_config 2>/dev/null | tail -n1)
 ```
+
+###  OSSP UUID library is not well maintained.
+
+https://www.postgresql.org/docs/16/uuid-ossp.html#UUID-OSSP-BUILDING
