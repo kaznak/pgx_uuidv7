@@ -6,6 +6,7 @@
         "cdylib",
         "fract",
         "nanos",
+        "OSSP",
         "pgrx",
         "timestamptz",
         "uuidv7"
