@@ -62,10 +62,7 @@ IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the 
 #[pg_extern(immutable, parallel_safe)]
 fn uuid_to_timestamptz(uuid: pgrx::Uuid) -> Option<pgrx::TimestampWithTimeZone> {
     let u: uuid::Uuid = Converter(uuid).into();
-    match u.get_timestamp() {
-        Some(ts) => Some(Converter(ts).into()),
-        None => None,
-    }
+    u.get_timestamp().map(|ts| Converter(ts).into())
 }
 
 extension_sql!(
