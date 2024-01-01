@@ -80,7 +80,7 @@ mkdir -p $tmpd/package/usr/lib/postgresql/lib
 cp  $based/target/release/${EXT_NAME}-pg${PG_VERSION}/usr/lib/postgresql/${PG_VERSION}/lib/${EXT_NAME}.so   \
     $tmpd/package/usr/lib/postgresql/lib
 mkdir -p $tmpd/package/usr/lib/postgresql/${PG_VERSION}/lib
-cp -s $tmpd/package/usr/lib/postgresql/lib/*.so $tmpd/package/usr/lib/postgresql/${PG_VERSION}/lib
+cp -s $tmpd/package/usr/lib/postgresql/lib/${EXT_NAME}.so $tmpd/package/usr/lib/postgresql/${PG_VERSION}/lib
 
 PROGRESS "$LINENO" "copying extension files"
 mkdir -p $tmpd/package/var/lib/postgresql/extension
