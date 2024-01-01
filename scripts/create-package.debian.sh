@@ -56,20 +56,21 @@ EXT_VERSION=$3
 ARCH=$4
 PKG_NAME=$5
 
-PKG_BASED=$based/target/release/${EXT_NAME}-pg${PG_VERSION}/
+PKG_BASED=$based/target/release/${EXT_NAME}-pg${PG_VERSION}
 
 cd $based
 
 ################################################################
-PROGRESS "$LINENO" "building binaries"
-# selects the pgVer from pg_config on path
-# https://github.com/tcdi/pgrx/issues/288
-cargo pgrx package --no-default-features --features "pg${PG_VERSION}"
+# PROGRESS "$LINENO" "building binaries"
+# # selects the pgVer from pg_config on path
+# # https://github.com/tcdi/pgrx/issues/288
+# cargo pgrx package --no-default-features --features "pg${PG_VERSION}"
 
 ################################################################
 PROGRESS "$LINENO" "building installable package"
-mkdir -p $tmpd/package/DEBIAN
-cat <<EOF   > $tmpd/package/DEBIAN/control
+mkdir -p ${PKG_BASED}/DEBIAN
+rm -f ${PKG_BASED}/DEBIAN/control
+cat <<EOF   > ${PKG_BASED}/DEBIAN/control
 Package: ${PKG_NAME}
 Version: ${EXT_VERSION}
 Architecture: ${ARCH}
@@ -78,32 +79,29 @@ Description: A PostgreSQL extension for UUIDv7
 EOF
 
 PROGRESS "$LINENO" "copying dynamic libraries"
-mkdir -p $tmpd/package/usr/lib/postgresql/lib
-cp  ${PKG_BASED}/usr/lib/postgresql/${PG_VERSION}/lib/${EXT_NAME}.so   \
-    $tmpd/package/usr/lib/postgresql/lib
-mkdir -p $tmpd/package/usr/lib/postgresql/${PG_VERSION}/lib
-cp -s $tmpd/package/usr/lib/postgresql/lib/${EXT_NAME}.so $tmpd/package/usr/lib/postgresql/${PG_VERSION}/lib
+mkdir -p ${PKG_BASED}/usr/lib/postgresql/lib
+pushd ${PKG_BASED}/usr/lib/postgresql/lib   > /dev/null
+rm -f ${EXT_NAME}.so
+cp -s ../${PG_VERSION}/lib/${EXT_NAME}.so .
+popd   > /dev/null
 
 PROGRESS "$LINENO" "copying extension files"
-mkdir -p $tmpd/package/var/lib/postgresql/extension
-cp  ${PKG_BASED}/usr/share/postgresql/${PG_VERSION}/extension/${EXT_NAME}.control   \
-    ${PKG_BASED}/usr/share/postgresql/${PG_VERSION}/extension/${EXT_NAME}--${EXT_VERSION}.sql   \
-    $tmpd/package/var/lib/postgresql/extension
-mkdir -p $tmpd/package/usr/share/postgresql/${PG_VERSION}/extension
-cp -s   \
-    $tmpd/package/var/lib/postgresql/extension/${EXT_NAME}.control  \
-    $tmpd/package/var/lib/postgresql/extension/${EXT_NAME}--${EXT_VERSION}.sql  \
-    $tmpd/package/usr/share/postgresql/${PG_VERSION}/extension
-
+mkdir -p ${PKG_BASED}/var/lib/postgresql/extension
+pushd ${PKG_BASED}/var/lib/postgresql/extension   > /dev/null
+rm -f ${EXT_NAME}.control
+cp -s ../../../../usr/share/postgresql/${PG_VERSION}/extension/${EXT_NAME}.control .
+rm -f ${EXT_NAME}--${EXT_VERSION}.sql
+cp -s ../../../../usr/share/postgresql/${PG_VERSION}/extension/${EXT_NAME}--${EXT_VERSION}.sql .
+popd   > /dev/null
 
 PROGRESS "$LINENO" "creating deb package"
-chmod -R 00755 $tmpd/package
-# chown -R root:root $tmpd/package
-dpkg-deb -Zxz --build --root-owner-group $tmpd/package
+chmod -R 00755 ${PKG_BASED}
+sudo chown -R root:root ${PKG_BASED}
+dpkg-deb -Zxz --build --root-owner-group ${PKG_BASED}
 
 PKG_OUT=$based/target/${EXT_NAME}-${PG_VERSION}-${ARCH}-linux-gnu.deb
 PROGRESS "$LINENO" "copying package to $PKG_OUT"
-mv $tmpd/package.deb $PKG_OUT
+mv ${PKG_BASED}.deb $PKG_OUT
 
 ################################################################
 PROGRESS "$LINENO" "exiting"
