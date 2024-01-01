@@ -93,7 +93,7 @@ chmod -R 00755 ${PKG_BASED}
 sudo chown -R root:root ${PKG_BASED}
 dpkg-deb -Zxz --build --root-owner-group ${PKG_BASED}
 
-PKG_OUT=$based/target/${EXT_NAME}-${PG_VERSION}-${ARCH}-linux-gnu.deb
+PKG_OUT=$based/target/${PKG_NAME}-${PG_VERSION}-${ARCH}-linux-gnu.deb
 PROGRESS "$LINENO" "copying package to $PKG_OUT"
 mv ${PKG_BASED}.deb $PKG_OUT
 
