@@ -61,12 +61,6 @@ PKG_BASED=$based/target/release/${EXT_NAME}-pg${PG_VERSION}
 cd $based
 
 ################################################################
-# PROGRESS "$LINENO" "building binaries"
-# # selects the pgVer from pg_config on path
-# # https://github.com/tcdi/pgrx/issues/288
-# cargo pgrx package --no-default-features --features "pg${PG_VERSION}"
-
-################################################################
 PROGRESS "$LINENO" "building installable package"
 mkdir -p ${PKG_BASED}/DEBIAN
 rm -f ${PKG_BASED}/DEBIAN/control
