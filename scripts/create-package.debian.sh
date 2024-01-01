@@ -56,6 +56,8 @@ EXT_VERSION=$3
 ARCH=$4
 PKG_NAME=$5
 
+PKG_BASED=$based/target/release/${EXT_NAME}-pg${PG_VERSION}/
+
 cd $based
 
 ################################################################
@@ -77,15 +79,15 @@ EOF
 
 PROGRESS "$LINENO" "copying dynamic libraries"
 mkdir -p $tmpd/package/usr/lib/postgresql/lib
-cp  $based/target/release/${EXT_NAME}-pg${PG_VERSION}/usr/lib/postgresql/${PG_VERSION}/lib/${EXT_NAME}.so   \
+cp  ${PKG_BASED}/usr/lib/postgresql/${PG_VERSION}/lib/${EXT_NAME}.so   \
     $tmpd/package/usr/lib/postgresql/lib
 mkdir -p $tmpd/package/usr/lib/postgresql/${PG_VERSION}/lib
 cp -s $tmpd/package/usr/lib/postgresql/lib/${EXT_NAME}.so $tmpd/package/usr/lib/postgresql/${PG_VERSION}/lib
 
 PROGRESS "$LINENO" "copying extension files"
 mkdir -p $tmpd/package/var/lib/postgresql/extension
-cp  $based/target/release/${EXT_NAME}-pg${PG_VERSION}/usr/share/postgresql/${PG_VERSION}/extension/${EXT_NAME}.control   \
-    $based/target/release/${EXT_NAME}-pg${PG_VERSION}/usr/share/postgresql/${PG_VERSION}/extension/${EXT_NAME}--${EXT_VERSION}.sql   \
+cp  ${PKG_BASED}/usr/share/postgresql/${PG_VERSION}/extension/${EXT_NAME}.control   \
+    ${PKG_BASED}/usr/share/postgresql/${PG_VERSION}/extension/${EXT_NAME}--${EXT_VERSION}.sql   \
     $tmpd/package/var/lib/postgresql/extension
 mkdir -p $tmpd/package/usr/share/postgresql/${PG_VERSION}/extension
 cp -s   \
