@@ -51,10 +51,11 @@ PROGRESS() {
 PROGRESS "$LINENO" "reading arguments"
 
 PG_VERSION=$1
-EXT_NAME=$2
-EXT_VERSION=$3
-ARCH=$4
-PKG_NAME=$5
+ARCH=$2
+
+EXT_NAME=$(yq -r -o json '.package.name' Cargo.toml)
+EXT_VERSION=$(yq -r -o json '.package.version' Cargo.toml)
+PKG_NAME=$(echo $EXT_NAME | sed -e 's/-/_/g')
 
 BLD_BASED=$based/target/release/${EXT_NAME}-pg${PG_VERSION}
 PKG_BASED=${BLD_BASED}.debian_package_tmp
