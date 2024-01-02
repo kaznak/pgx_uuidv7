@@ -1,8 +1,5 @@
 env:
-  EXT_NAME: pgx_uuidv7 # must be read from Cargo.toml
-  EXT_VERSION: 0.1.1 # must be read from Cargo.toml
-  PKG_NAME: pgx-uuidv7 # must be converted from EXT_NAME
-  PGRX_VERSION: 0.11.2 # must be read from Cargo.toml
+  PKG_NAME: pgx-uuidv7 # TODO must be converted from EXT_NAME
 name: Release
 on:
   workflow_dispatch:
@@ -19,31 +16,21 @@ jobs:
       matrix:
         pgVersion:
         - 16
-        runner:
-        - ubuntu-22.04
-        arch:
-        - amd64
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-22.04
     timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Build Package
         run: |
-          make build  \
-            PG_VERSION=${{ matrix.pgVersion }}  \
-            EXT_NAME=${{ env.EXT_NAME }} \
-            EXT_VERSION=${{ env.EXT_VERSION }}  \
-            ARCH=${{ matrix.arch }} \
-            PKG_NAME=${{ env.PKG_NAME }}
-            PG_VERSION=${{ matrix.pgVersion }}  \
-            PGRX_VERSION=${{ env.PGRX_VERSION }}
+          make build PG_VERSION=${{ matrix.pgVersion }}
 
       - name: Upload artifacts
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.PAT_FOR_RELEASE }}
           draft: true
+          # TODO artifact name shoud be changed and passed from build step
           artifacts: ./target/${{ env.PKG_NAME }}-${{ matrix.pgVersion }}-${{ matrix.arch }}-linux-gnu.deb
           artifactContentType: application/vnd.debian.binary-package
           bodyFile: ./RELEASE_NOTE.md
