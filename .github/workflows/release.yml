@@ -5,6 +5,7 @@ env:
   PGRX_VERSION: 0.11.2
 name: Release
 on:
+  workflow_dispatch:
   push:
     tags:
       - 'v*'
