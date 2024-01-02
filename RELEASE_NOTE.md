@@ -1,14 +1,13 @@
 
-v0.1.0 release:
+v0.1.1 release:
 
-first release with basic features:
+features:
 
 - Generate or Cast to UUIDv7
 - Cast from UUIDv7 to timestamptz
 
-lots of code is copied and modified from these following repositories:
+changes:
 
-- [pg_uuidv7](https://github.com/craigpastro/pg_uuidv7)
-- [pgx_ulid](https://github.com/pksunkara/pgx_ulid)
-
-Thank you.
+- Refine build process.
+- Build for PostgreSQL 16(only)
+- Add a function, uuid_get_version
