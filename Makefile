@@ -1,5 +1,5 @@
 EXT_NAME=pgx_uuidv7
-EXT_VERSION=0.1.0
+EXT_VERSION=0.1.1 # must be read from Cargo.toml
 PKG_NAME=pgx-uuidv7
 ARCH=amd64
 PG_VERSION=16
