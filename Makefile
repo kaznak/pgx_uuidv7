@@ -1,9 +1,7 @@
-EXT_NAME=pgx_uuidv7 # must be read from Cargo.toml
-EXT_VERSION=0.1.1 # must be read from Cargo.toml
-PKG_NAME=pgx-uuidv7 # must be converted from EXT_NAME
-ARCH=amd64
 PG_VERSION=16
-PGRX_VERSION=0.11.2 # must be read from Cargo.toml
+ARCH=amd64
+
+PGRX_VERSION=$(shell yq -r -o json '.dependencies.pgrx' Cargo.toml | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
 BUILD_IMAGD=ghcr.io/kaznak/pgrx-build:debian_bullseye-pg$(PG_VERSION)-pgrx$(PGRX_VERSION)
 
 build:
@@ -11,10 +9,7 @@ build:
 	docker run --rm -v $(PWD):/checkout -w /checkout $(BUILD_IMAGD) \
 	./scripts/create-package.debian.sh	\
 		$(PG_VERSION)	\
-		$(EXT_NAME)	\
-		$(EXT_VERSION)	\
-		$(ARCH)	\
-		$(PKG_NAME)
+		$(ARCH)
 
 test:
 	docker run --rm -v $(PWD):/checkout -w /checkout $(BUILD_IMAGD) cargo pgrx test
