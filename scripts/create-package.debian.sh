@@ -55,7 +55,7 @@ ARCH=$2
 
 EXT_NAME=$(yq -r -o json '.package.name' Cargo.toml)
 EXT_VERSION=$(yq -r -o json '.package.version' Cargo.toml)
-PKG_NAME=$(echo $EXT_NAME | sed -e 's/-/_/g')
+PKG_NAME=$(echo $EXT_NAME | tr '_' '-')
 
 BLD_BASED=$based/target/release/${EXT_NAME}-pg${PG_VERSION}
 PKG_BASED=${BLD_BASED}.debian_package_tmp
@@ -71,19 +71,20 @@ cargo pgrx package --no-default-features --features "pg${PG_VERSION}"
 
 ################################################################
 PROGRESS "$LINENO" "cleanup package directory"
-rm -rf ${PKG_BASED}
+sudo rm -rf ${PKG_BASED}
 cp -rp ${BLD_BASED} ${PKG_BASED}
 
 PROGRESS "$LINENO" "building installable package"
 mkdir -p ${PKG_BASED}/DEBIAN
 rm -f ${PKG_BASED}/DEBIAN/control
-cat <<EOF   > ${PKG_BASED}/DEBIAN/control
+cat <<EOF   |
 Package: ${PKG_NAME}
 Version: ${EXT_VERSION}
 Architecture: ${ARCH}
 Maintainer: Nakamura Kazutaka
 Description: A PostgreSQL extension for UUIDv7
 EOF
+tee ${PKG_BASED}/DEBIAN/control >&3
 
 PROGRESS "$LINENO" "copying dynamic libraries"
 mkdir -p ${PKG_BASED}/usr/lib/postgresql/lib
