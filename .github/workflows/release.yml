@@ -32,7 +32,7 @@ jobs:
         run: |
           make build  \
             PG_VERSION=${{ matrix.pgVersion }}  \
-            EXT_NAME=$${{ env.EXT_NAME }} \
+            EXT_NAME=${{ env.EXT_NAME }} \
             EXT_VERSION=${{ env.EXT_VERSION }}  \
             ARCH=${{ matrix.arch }} \
             PKG_NAME=${{ env.PKG_NAME }}
