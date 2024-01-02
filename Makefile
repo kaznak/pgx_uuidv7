@@ -17,3 +17,6 @@ build:
 
 test:
 	docker run --rm -v $(PWD):/build -w /build $(BUILD_IMAGD) cargo pgrx test
+
+clean:
+	sudo rm -rf ./target/release/pgx_uuidv7-pg$(PG_VERSION)
