@@ -7,6 +7,7 @@ PGRX_VERSION=0.11.2
 BUILD_IMAGD=ghcr.io/kaznak/pgrx-build:debian_bullseye-pg$(PG_VERSION)-pgrx$(PGRX_VERSION)
 
 build:
+	id
 	docker run --rm -v $(PWD):/checkout -w /checkout $(BUILD_IMAGD) \
 	./scripts/create-package.debian.sh	\
 		$(PG_VERSION)	\

@@ -60,6 +60,7 @@ BLD_BASED=$based/target/release/${EXT_NAME}-pg${PG_VERSION}
 PKG_BASED=${BLD_BASED}.debian_package_tmp
 
 cd $based
+id
 
 ################################################################
 PROGRESS "$LINENO" "building binaries"
