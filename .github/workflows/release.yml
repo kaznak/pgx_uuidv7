@@ -18,7 +18,6 @@ jobs:
       fail-fast: false
       matrix:
         pgVersion:
-        - 15
         - 16
         runner:
         - ubuntu-22.04
