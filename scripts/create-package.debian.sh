@@ -56,11 +56,22 @@ EXT_VERSION=$3
 ARCH=$4
 PKG_NAME=$5
 
-PKG_BASED=$based/target/release/${EXT_NAME}-pg${PG_VERSION}
+BLD_BASED=$based/target/release/${EXT_NAME}-pg${PG_VERSION}
+PKG_BASED=${BLD_BASED}.debian_package_tmp
 
 cd $based
 
 ################################################################
+PROGRESS "$LINENO" "building binaries"
+# selects the pgVer from pg_config on path
+# https://github.com/tcdi/pgrx/issues/288
+cargo pgrx package --no-default-features --features "pg${PG_VERSION}"
+
+################################################################
+PROGRESS "$LINENO" "cleanup package directory"
+rm -rf ${PKG_BASED}
+cp -rp ${BLD_BASED} ${PKG_BASED}
+
 PROGRESS "$LINENO" "building installable package"
 mkdir -p ${PKG_BASED}/DEBIAN
 rm -f ${PKG_BASED}/DEBIAN/control
