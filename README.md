@@ -74,12 +74,14 @@ WHERE foo.id::timestamptz < '2012-03-04T05:06:07.123+00:00';
 This extension provides PostgreSQL 18 compatible function names as aliases:
 
 ```sql
--- PostgreSQL 18 compatible functions
+-- PostgreSQL 18 compatible functions (available only when targeting PostgreSQL < 18)
 SELECT uuidv7();                           -- alias for uuid_generate_v7_now()
 SELECT uuidv7(INTERVAL '-1 hour');         -- generate UUID with timestamp offset
 SELECT uuid_extract_version(some_uuid);   -- alias for uuid_get_version()
 SELECT uuid_extract_timestamp(some_uuid); -- alias for uuid_to_timestamptz()
 ```
+
+**Note**: These PostgreSQL 18 compatible functions are automatically excluded when building for PostgreSQL 18 to avoid conflicts with native functions. They are only available when targeting PostgreSQL versions prior to 18.
 
 This allows for easy migration to PostgreSQL 18 when it becomes available.
 
@@ -106,6 +108,8 @@ Thank you.
 PG_VERSION=16 # set postgresql major version
 cargo pgrx package --no-default-features --features pg$PG_VERSION --pg-config $(ls ~/.pgrx/$PG_VERSION.*/pgrx-install/bin/pg_config 2>/dev/null | tail -n1)
 ```
+
+**Note**: When building for PostgreSQL 18 (`--features pg18`), the PostgreSQL 18 compatible functions (`uuidv7()`, `uuid_extract_version()`, `uuid_extract_timestamp()`) will be automatically excluded to prevent conflicts with PostgreSQL 18's native UUIDv7 functions.
 
 ###  OSSP UUID library is not well maintained.
 

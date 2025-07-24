@@ -134,13 +134,16 @@ IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the 
     requires = [timestamptz_to_uuid_v7_max],
 );
 
-// PostgreSQL 18 compatibility aliases
+// PostgreSQL 18 compatibility aliases - only for versions < 18
+#[cfg(not(feature = "pg18"))]
 /// PostgreSQL 18 compatible alias for uuid_generate_v7_now()
+/// Only available when targeting PostgreSQL < 18 to avoid conflicts
 #[pg_extern(parallel_safe)]
 fn uuidv7() -> pgrx::Uuid {
     uuid_generate_v7_now()
 }
 
+#[cfg(not(feature = "pg18"))]
 extension_sql!(
     r#"
 COMMENT ON FUNCTION "uuidv7"()
@@ -150,8 +153,10 @@ IS 'PostgreSQL 18 compatible alias for uuid_generate_v7_now(). Generate and retu
     requires = [uuidv7],
 );
 
+#[cfg(not(feature = "pg18"))]
 /// PostgreSQL 18 compatible function with interval parameter
 /// Generate UUID v7 with timestamp offset by the given interval from current time
+/// Only available when targeting PostgreSQL < 18 to avoid conflicts
 #[pg_extern(parallel_safe)]
 fn uuidv7_with_interval(interval: pgrx::datum::Interval) -> pgrx::Uuid {
     // Get current transaction timestamp directly (respects transaction boundaries)
@@ -164,12 +169,15 @@ fn uuidv7_with_interval(interval: pgrx::datum::Interval) -> pgrx::Uuid {
     uuid_generate_v7(target_time)
 }
 
+#[cfg(not(feature = "pg18"))]
 /// PostgreSQL 18 compatible function (overloaded uuidv7 with interval)
+/// Only available when targeting PostgreSQL < 18 to avoid conflicts
 #[pg_extern(name = "uuidv7", parallel_safe)]
 fn uuidv7_interval(interval: pgrx::datum::Interval) -> pgrx::Uuid {
     uuidv7_with_interval(interval)
 }
 
+#[cfg(not(feature = "pg18"))]
 extension_sql!(
     r#"
 COMMENT ON FUNCTION "uuidv7"(interval)
@@ -179,12 +187,15 @@ IS 'PostgreSQL 18 compatible function. Generate and return a new UUID using the 
     requires = [uuidv7_interval],
 );
 
+#[cfg(not(feature = "pg18"))]
 /// PostgreSQL 18 compatible alias for uuid_get_version()
+/// Only available when targeting PostgreSQL < 18 to avoid conflicts
 #[pg_extern(parallel_safe)]
 fn uuid_extract_version(uuid: pgrx::Uuid) -> i8 {
     uuid_get_version(uuid)
 }
 
+#[cfg(not(feature = "pg18"))]
 extension_sql!(
     r#"
 COMMENT ON FUNCTION "uuid_extract_version"(uuid)
@@ -194,12 +205,15 @@ IS 'PostgreSQL 18 compatible alias for uuid_get_version(). Return the version of
     requires = [uuid_extract_version],
 );
 
+#[cfg(not(feature = "pg18"))]
 /// PostgreSQL 18 compatible alias for uuid_to_timestamptz()
+/// Only available when targeting PostgreSQL < 18 to avoid conflicts
 #[pg_extern(immutable, parallel_safe)]
 fn uuid_extract_timestamp(uuid: pgrx::Uuid) -> Option<pgrx::datum::TimestampWithTimeZone> {
     uuid_to_timestamptz(uuid)
 }
 
+#[cfg(not(feature = "pg18"))]
 extension_sql!(
     r#"
 COMMENT ON FUNCTION "uuid_extract_timestamp"(uuid)
@@ -526,6 +540,7 @@ mod tests {
         assert!(same_timestamp);
     }
 
+    #[cfg(not(feature = "pg18"))]
     #[pg_test]
     fn test_postgresql_18_compatibility() {
         // Test uuidv7() alias
@@ -550,10 +565,11 @@ mod tests {
         assert_eq!(ts_orig, ts_alias);
     }
 
+    #[cfg(not(feature = "pg18"))]
     #[pg_test]
     fn test_uuidv7_with_interval() {
         // Test uuidv7 with interval parameter (PostgreSQL 18 compatibility)
-        // First, just verify the function works at all
+        // Test via SQL to match real-world usage patterns
         let result = Spi::get_one::<pgrx::Uuid>(
             "SELECT uuidv7(INTERVAL '-1 hour');"
         ).unwrap();
@@ -568,10 +584,11 @@ mod tests {
         assert!(timestamp.is_some(), "Should be able to extract timestamp from UUIDv7");
     }
 
+    #[cfg(not(feature = "pg18"))]
     #[pg_test]
     fn test_uuidv7_interval_ordering() {
         // Test that UUIDs generated with different intervals maintain proper ordering
-        // For now, just test that the functions work without throwing errors
+        // Test via SQL to match real-world usage patterns
         let uuid_past = Spi::get_one::<pgrx::Uuid>("SELECT uuidv7(INTERVAL '-1 hour')").unwrap().unwrap();
         let uuid_now = Spi::get_one::<pgrx::Uuid>("SELECT uuidv7()").unwrap().unwrap();
         
