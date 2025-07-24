@@ -1,4 +1,4 @@
-PG_VERSION=16
+PG_VERSION=17
 ARCH=amd64
 
 PGRX_VERSION=$(shell yq -r -o json '.dependencies.pgrx' Cargo.toml | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
