@@ -326,6 +326,130 @@ mod tests {
         assert!(ret2[0].is_some());
         assert!(ret2[0].as_ref().unwrap() == "b");
     }
+
+    #[pg_test]
+    fn test_invalid_uuid_version() {
+        // Test with UUID v4 (not v7) - should return NULL
+        let result = Spi::get_one::<pgrx::TimestampWithTimeZone>(
+            "SELECT uuid_to_timestamptz(gen_random_uuid());"
+        ).unwrap();
+        
+        // Should return None for non-v7 UUIDs
+        assert!(result.is_none());
+    }
+
+    #[pg_test]
+    fn test_extreme_timestamps() {
+        // Test near Unix epoch (1970-01-01)
+        let epoch_result = Spi::get_one::<pgrx::Uuid>(
+            "SELECT uuid_generate_v7('1970-01-01T00:00:00+00:00');"
+        ).unwrap();
+        assert!(epoch_result.is_some());
+
+        // Test year 2038 (32-bit timestamp overflow)
+        let y2038_result = Spi::get_one::<pgrx::Uuid>(
+            "SELECT uuid_generate_v7('2038-01-19T03:14:07+00:00');"
+        ).unwrap();
+        assert!(y2038_result.is_some());
+
+        // Test far future (year 2100)
+        let future_result = Spi::get_one::<pgrx::Uuid>(
+            "SELECT uuid_generate_v7('2100-01-01T00:00:00+00:00');"
+        ).unwrap();
+        assert!(future_result.is_some());
+
+        // Verify timestamp conversion works correctly
+        let verify_result = Spi::get_one::<bool>(
+            "
+            WITH test_uuid AS (
+                SELECT uuid_generate_v7('2100-01-01T00:00:00+00:00') AS id
+            )
+            SELECT 
+                uuid_to_timestamptz(id) = '2100-01-01T00:00:00+00:00'::timestamptz AS matches
+            FROM test_uuid
+            "
+        ).unwrap();
+        assert!(verify_result.unwrap());
+    }
+
+    #[pg_test]
+    fn test_null_handling() {
+        // Test NULL input for uuid_generate_v7
+        let null_timestamp_result = Spi::get_one::<pgrx::Uuid>(
+            "SELECT uuid_generate_v7(NULL::timestamptz);"
+        ).unwrap();
+        assert!(null_timestamp_result.is_none());
+
+        // Test NULL input for uuid_to_timestamptz
+        let null_uuid_result = Spi::get_one::<pgrx::TimestampWithTimeZone>(
+            "SELECT uuid_to_timestamptz(NULL::uuid);"
+        ).unwrap();
+        assert!(null_uuid_result.is_none());
+
+        // Test NULL input for timestamptz_to_uuid_v7_min
+        let null_min_result = Spi::get_one::<pgrx::Uuid>(
+            "SELECT timestamptz_to_uuid_v7_min(NULL::timestamptz);"
+        ).unwrap();
+        assert!(null_min_result.is_none());
+    }
+
+    #[pg_test]
+    fn test_concurrent_uuid_generation() {
+        // Generate multiple UUIDs at the same timestamp using SQL
+        Spi::run(
+            "
+            CREATE TEMP TABLE uuid_test AS
+            WITH same_time AS (
+                SELECT '2023-06-15T12:34:56.789+00:00'::timestamptz AS ts
+            )
+            SELECT 
+                timestamptz_to_uuid_v7_random(ts) AS uuid1,
+                timestamptz_to_uuid_v7_random(ts) AS uuid2,
+                timestamptz_to_uuid_v7_random(ts) AS uuid3
+            FROM same_time;
+            "
+        ).unwrap();
+
+        // Verify all UUIDs are different
+        let unique_count = Spi::get_one::<i64>(
+            "SELECT COUNT(DISTINCT uuid_val) FROM (SELECT uuid1 AS uuid_val FROM uuid_test UNION ALL SELECT uuid2 AS uuid_val FROM uuid_test UNION ALL SELECT uuid3 AS uuid_val FROM uuid_test) t;"
+        ).unwrap().unwrap();
+        assert_eq!(unique_count, 3);
+
+        // Verify they all convert back to the same timestamp
+        let same_timestamp_count = Spi::get_one::<i64>(
+            "
+            SELECT COUNT(DISTINCT ts) FROM (
+                SELECT uuid_to_timestamptz(uuid1) AS ts FROM uuid_test
+                UNION ALL
+                SELECT uuid_to_timestamptz(uuid2) AS ts FROM uuid_test
+                UNION ALL
+                SELECT uuid_to_timestamptz(uuid3) AS ts FROM uuid_test
+            ) t;
+            "
+        ).unwrap().unwrap();
+        assert_eq!(same_timestamp_count, 1);
+    }
+
+    #[pg_test]
+    fn test_timezone_handling() {
+        // Test with different timezone representations
+        // Note: uuid_generate_v7 may include random bits, so we test timestamp conversion instead
+        let same_timestamp = Spi::get_one::<bool>(
+            "
+            SELECT 
+                uuid_to_timestamptz(uuid_generate_v7('2023-06-15 12:00:00+02:00'::timestamptz)) = 
+                '2023-06-15 10:00:00+00:00'::timestamptz AND
+                uuid_to_timestamptz(uuid_generate_v7('2023-06-15 10:00:00+00:00'::timestamptz)) = 
+                '2023-06-15 10:00:00+00:00'::timestamptz AND
+                uuid_to_timestamptz(uuid_generate_v7('2023-06-15 06:00:00-04:00'::timestamptz)) = 
+                '2023-06-15 10:00:00+00:00'::timestamptz
+            "
+        ).unwrap().unwrap();
+
+        // All should convert back to the same UTC timestamp
+        assert!(same_timestamp);
+    }
 }
 
 /// This module is required by `cargo pgrx test` invocations.
