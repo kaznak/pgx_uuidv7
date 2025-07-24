@@ -1,4 +1,4 @@
-use chrono::{DateTime, Datelike, NaiveDateTime, Timelike, Utc};
+use chrono::{DateTime, Datelike, Timelike, Utc};
 use pgrx::prelude::*;
 
 #[derive(Debug)]
@@ -44,8 +44,7 @@ impl From<Converter<uuid::Timestamp>> for chrono::DateTime<Utc> {
     fn from(value: Converter<uuid::Timestamp>) -> Self {
         let ts = value.unwrap();
         let (epoch, nanoseconds) = ts.to_unix();
-        let naive_datetime = NaiveDateTime::from_timestamp_opt(epoch as i64, nanoseconds).unwrap();
-        DateTime::from_naive_utc_and_offset(naive_datetime, Utc)
+        DateTime::from_timestamp(epoch as i64, nanoseconds % 1_000_000_000).unwrap()
     }
 }
 
