@@ -42,7 +42,7 @@ IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the 
 /// Generate and return a new UUID using the v7 algorithm.
 /// The timestamp is the given timestamp.
 #[pg_extern(parallel_safe)]
-fn uuid_generate_v7(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
+fn uuid_generate_v7(ts: pgrx::datum::TimestampWithTimeZone) -> pgrx::Uuid {
     let u = Uuid::new_v7(Converter(ts).into());
     Converter(u).into()
 }
@@ -60,7 +60,7 @@ IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the 
 /// The timestamp is the timestamp encoded in the UUID.
 /// The timezone is UTC.
 #[pg_extern(immutable, parallel_safe)]
-fn uuid_to_timestamptz(uuid: pgrx::Uuid) -> Option<pgrx::TimestampWithTimeZone> {
+fn uuid_to_timestamptz(uuid: pgrx::Uuid) -> Option<pgrx::datum::TimestampWithTimeZone> {
     let u: uuid::Uuid = Converter(uuid).into();
     u.get_timestamp().map(|ts| Converter(ts).into())
 }
@@ -78,7 +78,7 @@ IS 'Convert a UUID to a timestamptz. The timestamp is the timestamp encoded in t
 /// The timestamp is the given timestamp.
 /// This function is a wrapper around `uuid_generate_v7`.
 #[pg_extern(parallel_safe)]
-fn timestamptz_to_uuid_v7_random(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
+fn timestamptz_to_uuid_v7_random(ts: pgrx::datum::TimestampWithTimeZone) -> pgrx::Uuid {
     uuid_generate_v7(ts)
 }
 
@@ -92,7 +92,7 @@ IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the 
 );
 
 #[inline]
-fn _timestamptz_to_uuid_v7(ts: pgrx::TimestampWithTimeZone, rv: &[u8; 10]) -> pgrx::Uuid {
+fn _timestamptz_to_uuid_v7(ts: pgrx::datum::TimestampWithTimeZone, rv: &[u8; 10]) -> pgrx::Uuid {
     let u: uuid::Uuid =
         uuid::Builder::from_unix_timestamp_millis(to_uuid_timestamp_buildpart(ts), rv).into_uuid();
     Converter(u).into()
@@ -102,7 +102,7 @@ fn _timestamptz_to_uuid_v7(ts: pgrx::TimestampWithTimeZone, rv: &[u8; 10]) -> pg
 /// The timestamp is the given timestamp.
 /// The UUID is the minimum UUID that can be generated for the given timestamp.
 #[pg_extern(immutable, parallel_safe)]
-fn timestamptz_to_uuid_v7_min(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
+fn timestamptz_to_uuid_v7_min(ts: pgrx::datum::TimestampWithTimeZone) -> pgrx::Uuid {
     let rv = [0x0 as u8; 10];
     _timestamptz_to_uuid_v7(ts, &rv)
 }
@@ -120,7 +120,7 @@ IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the 
 /// The timestamp is the given timestamp.
 /// The UUID is the maximum UUID that can be generated for the given timestamp.
 #[pg_extern(immutable, parallel_safe)]
-fn timestamptz_to_uuid_v7_max(ts: pgrx::TimestampWithTimeZone) -> pgrx::Uuid {
+fn timestamptz_to_uuid_v7_max(ts: pgrx::datum::TimestampWithTimeZone) -> pgrx::Uuid {
     let rv = [0xff as u8; 10];
     _timestamptz_to_uuid_v7(ts, &rv)
 }
@@ -158,8 +158,8 @@ mod tests {
         assert_eq!(7, v);
     }
 
-    fn gen_pt() -> pgrx::TimestampWithTimeZone {
-        pgrx::TimestampWithTimeZone::with_timezone(2012, 3, 4, 5, 6, 7.123456789, "UTC").unwrap()
+    fn gen_pt() -> pgrx::datum::TimestampWithTimeZone {
+        pgrx::datum::TimestampWithTimeZone::with_timezone(2012, 3, 4, 5, 6, 7.123456789, "UTC").unwrap()
     }
 
     #[pg_test]
@@ -176,9 +176,9 @@ mod tests {
         // Uuid::new_v7 uses milliseconds, not nanoseconds the timestamp structure accepts.
         assert_eq!(nanoseconds, 123_000_000);
 
-        let pt001: pgrx::TimestampWithTimeZone = uuid_to_timestamptz(g).unwrap(); // <-- calling
-        let pt002: pgrx::TimestampWithTimeZone =
-            pgrx::TimestampWithTimeZone::with_timezone(2012, 3, 4, 5, 6, 7.123, "UTC").unwrap();
+        let pt001: pgrx::datum::TimestampWithTimeZone = uuid_to_timestamptz(g).unwrap(); // <-- calling
+        let pt002: pgrx::datum::TimestampWithTimeZone =
+            pgrx::datum::TimestampWithTimeZone::with_timezone(2012, 3, 4, 5, 6, 7.123, "UTC").unwrap();
         assert_eq!(pt001, pt002);
     }
 
@@ -272,7 +272,7 @@ mod tests {
                 ORDER BY data;
                         ",
                     None,
-                    None,
+                    &[],
                 )
                 .unwrap()
                 .map(|row| (row["data"].value::<String>().unwrap()))
@@ -295,7 +295,7 @@ mod tests {
                     WHERE foo.id::timestamptz = '2012-03-04T05:06:07.123+00:00';
                     ",
                     None,
-                    None,
+                    &[],
                 )
                 .unwrap()
                 .map(|row| (row["data"].value::<String>().unwrap()))
@@ -316,7 +316,7 @@ mod tests {
                     WHERE foo.id::timestamptz < '2012-03-04T05:06:07.123+00:00';
                     ",
                     None,
-                    None,
+                    &[],
                 )
                 .unwrap()
                 .map(|row| (row["data"].value::<String>().unwrap()))
@@ -330,7 +330,7 @@ mod tests {
     #[pg_test]
     fn test_invalid_uuid_version() {
         // Test with UUID v4 (not v7) - should return NULL
-        let result = Spi::get_one::<pgrx::TimestampWithTimeZone>(
+        let result = Spi::get_one::<pgrx::datum::TimestampWithTimeZone>(
             "SELECT uuid_to_timestamptz(gen_random_uuid());"
         ).unwrap();
         
@@ -381,7 +381,7 @@ mod tests {
         assert!(null_timestamp_result.is_none());
 
         // Test NULL input for uuid_to_timestamptz
-        let null_uuid_result = Spi::get_one::<pgrx::TimestampWithTimeZone>(
+        let null_uuid_result = Spi::get_one::<pgrx::datum::TimestampWithTimeZone>(
             "SELECT uuid_to_timestamptz(NULL::uuid);"
         ).unwrap();
         assert!(null_uuid_result.is_none());
