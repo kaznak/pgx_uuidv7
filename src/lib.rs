@@ -56,6 +56,29 @@ IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the 
     requires = [uuid_generate_v7],
 );
 
+/// Generate and return a new UUID using the v7 algorithm.
+/// The timestamp is the current time plus the given interval.
+#[pg_extern(parallel_safe)]
+fn uuid_generate_v7_at_interval(interval: pgrx::datum::Interval) -> pgrx::Uuid {
+    // Get current transaction timestamp directly (respects transaction boundaries)
+    let current_time = pgrx::datum::datetime_support::now();
+    
+    // Add interval directly to timestamp
+    let target_time = current_time + interval;
+    
+    // Generate UUID v7 with the calculated timestamp
+    uuid_generate_v7(target_time)
+}
+
+extension_sql!(
+    r#"
+COMMENT ON FUNCTION "uuid_generate_v7_at_interval"(interval)
+IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the current time plus the given interval.';
+"#,
+    name = "comment_uuid_generate_v7_at_interval",
+    requires = [uuid_generate_v7_at_interval],
+);
+
 /// Convert a UUID to a timestamptz.
 /// The timestamp is the timestamp encoded in the UUID.
 /// The timezone is UTC.
@@ -425,6 +448,40 @@ mod tests {
         
         // Should return None for non-v7 UUIDs
         assert!(result.is_none());
+    }
+
+    #[pg_test]
+    fn test_uuid_generate_v7_with_interval() {
+        // Test uuid_generate_v7_at_interval function
+        let uuid_past = Spi::get_one::<pgrx::Uuid>(
+            "SELECT uuid_generate_v7_at_interval(INTERVAL '-1 hour');"
+        ).unwrap().unwrap();
+        
+        let uuid_now = Spi::get_one::<pgrx::Uuid>(
+            "SELECT uuid_generate_v7_now();"
+        ).unwrap().unwrap();
+        
+        let uuid_future = Spi::get_one::<pgrx::Uuid>(
+            "SELECT uuid_generate_v7_at_interval(INTERVAL '1 hour');"
+        ).unwrap().unwrap();
+        
+        // Verify all are version 7
+        assert_eq!(uuid_get_version(uuid_past), 7);
+        assert_eq!(uuid_get_version(uuid_now), 7);
+        assert_eq!(uuid_get_version(uuid_future), 7);
+        
+        // Extract timestamps
+        let ts_past = uuid_to_timestamptz(uuid_past).unwrap();
+        let ts_now = uuid_to_timestamptz(uuid_now).unwrap();
+        let ts_future = uuid_to_timestamptz(uuid_future).unwrap();
+        
+        // Verify timestamp ordering
+        assert!(ts_past < ts_now, "Past timestamp should be less than current");
+        assert!(ts_now < ts_future, "Current timestamp should be less than future");
+        
+        // Verify UUID ordering
+        assert!(uuid_past < uuid_now, "Past UUID should be less than current");
+        assert!(uuid_now < uuid_future, "Current UUID should be less than future");
     }
 
     #[pg_test]

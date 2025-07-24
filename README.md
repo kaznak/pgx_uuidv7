@@ -24,6 +24,13 @@ Generate for specific time:
 SELECT uuid_generate_v7('2012-03-04T05:06:07.123456789+00:00');
 ```
 
+Generate with interval offset from current time:
+
+```sql
+SELECT uuid_generate_v7_at_interval(INTERVAL '-1 hour');  -- 1 hour ago
+SELECT uuid_generate_v7_at_interval(INTERVAL '30 minutes');  -- 30 minutes from now
+```
+
 ### Cast to compare with timestamptz
 
 Preparation:

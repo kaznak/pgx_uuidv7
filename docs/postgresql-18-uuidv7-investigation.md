@@ -56,7 +56,7 @@ PostgreSQL 18では、UUIDv7のネイティブサポートが追加されます�
 |------|--------------|------------|
 | **UUID生成** |
 | 現在時刻でのUUID生成 | `uuidv7()` | `uuid_generate_v7_now()` |
-| インターバル付きUUID生成 | `uuidv7(interval)` | `uuidv7(interval)` ※互換実装 |
+| インターバル付きUUID生成 | `uuidv7(interval)` | `uuid_generate_v7_at_interval(interval)` |
 | 指定時刻でのUUID生成 | ❌ | `uuid_generate_v7(timestamptz)` |
 | **時刻変換** |
 | UUIDから時刻抽出 | `uuid_extract_timestamp()` | `uuid_to_timestamptz()` |
