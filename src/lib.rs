@@ -154,12 +154,10 @@ IS 'PostgreSQL 18 compatible alias for uuid_generate_v7_now(). Generate and retu
 /// Generate UUID v7 with timestamp offset by the given interval from current time
 #[pg_extern(parallel_safe)]
 fn uuidv7_with_interval(interval: pgrx::datum::Interval) -> pgrx::Uuid {
-    // Get current timestamp using SQL (pgrx doesn't have a direct now() function)
-    let current_time = pgrx::Spi::get_one::<pgrx::datum::TimestampWithTimeZone>(
-        "SELECT NOW()::timestamptz"
-    ).unwrap().unwrap();
+    // Get current transaction timestamp directly (respects transaction boundaries)
+    let current_time = pgrx::datum::datetime_support::now();
     
-    // Add interval directly to timestamp (no SQL needed!)
+    // Add interval directly to timestamp
     let target_time = current_time + interval;
     
     // Generate UUID v7 with the calculated timestamp
