@@ -597,8 +597,16 @@ mod tests {
         assert_eq!(uuid_extract_version(uuid_now), 7);
         
         // Verify timestamps can be extracted
-        assert!(uuid_extract_timestamp(uuid_past).is_some());
-        assert!(uuid_extract_timestamp(uuid_now).is_some());
+        let ts_past = uuid_extract_timestamp(uuid_past);
+        let ts_now = uuid_extract_timestamp(uuid_now);
+        assert!(ts_past.is_some());
+        assert!(ts_now.is_some());
+        
+        // Verify timestamp ordering: past < now
+        assert!(ts_past.unwrap() < ts_now.unwrap(), "Past timestamp should be less than current timestamp");
+        
+        // Also verify UUID ordering (UUIDv7 should maintain time-based ordering)
+        assert!(uuid_past < uuid_now, "Past UUID should be less than current UUID");
     }
 }
 
