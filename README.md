@@ -6,6 +6,7 @@ An extension for PostgreSQL that implements UUIDv7 with basic features.
 
 - Generate or Cast to UUIDv7
 - Cast from UUIDv7 to timestamptz
+- PostgreSQL 18 compatibility (provides compatible function names)
 
 ## Examples
 
@@ -67,6 +68,20 @@ FROM bar
 JOIN foo ON bar.foo_id = foo.id
 WHERE foo.id::timestamptz < '2012-03-04T05:06:07.123+00:00';
 ```
+
+## PostgreSQL 18 Compatibility
+
+This extension provides PostgreSQL 18 compatible function names as aliases:
+
+```sql
+-- PostgreSQL 18 compatible functions
+SELECT uuidv7();                           -- alias for uuid_generate_v7_now()
+SELECT uuidv7(INTERVAL '-1 hour');         -- generate UUID with timestamp offset
+SELECT uuid_extract_version(some_uuid);   -- alias for uuid_get_version()
+SELECT uuid_extract_timestamp(some_uuid); -- alias for uuid_to_timestamptz()
+```
+
+This allows for easy migration to PostgreSQL 18 when it becomes available.
 
 ## References
 
