@@ -12,8 +12,8 @@ permissions:
   contents: write
   
 jobs:
-  build-linux-gnu:
-    name: Build & Release for linux
+  build-packages:
+    name: Build packages
     strategy:
       fail-fast: false
       matrix:
@@ -28,13 +28,27 @@ jobs:
       - name: Build Package
         run: |
           make build PG_VERSION=${{ matrix.pgVersion }}
+      - name: Upload Package
+        uses: actions/upload-artifact@v3
+        with:
+          name: pgx-uuidv7-${{ matrix.pgVersion }}-amd64-linux-gnu.deb
+          path: ./target/${{ env.PKG_NAME }}-${{ matrix.pgVersion }}-amd64-linux-gnu.deb
 
+  create-release:
+    name: Create Release
+    needs: build-packages
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download all packages
+        uses: actions/download-artifact@v3
+        with:
+          path: ./packages
       - name: Create Release
         run: |
           gh release create ${{ github.ref_name }} \
             --draft \
             --title "${{ github.ref_name }}" \
             --generate-notes \
-            ./target/${{ env.PKG_NAME }}-${{ matrix.pgVersion }}-amd64-linux-gnu.deb
+            ./packages/*/*.deb
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
