@@ -24,9 +24,9 @@ pg18 = ["pgrx/pg18", "pgrx-tests/pg18" ]
 pg_test = []
 
 [dependencies]
-chrono = "0.4.31"
+chrono = "0.4.41"
 pgrx = "=0.15.0"
-uuid = { version = "1.4", features = ["std", "v7"] }
+uuid = { version = "1.17", features = ["std", "v7"] }
 
 [dev-dependencies]
 pgrx-tests = "=0.15.0"
