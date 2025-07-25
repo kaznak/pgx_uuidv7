@@ -597,17 +597,13 @@ mod tests {
         assert!(same_timestamp);
     }
 
-    #[cfg(not(any(feature = "pg17", feature = "pg18")))]
+    #[cfg(not(feature = "pg18"))]
     #[pg_test]
     fn test_postgresql_18_compatibility() {
         // Test uuidv7() alias
         let uuid_v7 = uuidv7();
         let version = uuid_extract_version(uuid_v7);
         assert_eq!(version, 7);
-
-        // Test uuid_extract_timestamp() alias
-        let timestamp = uuid_extract_timestamp(uuid_v7);
-        assert!(timestamp.is_some());
 
         // Test that aliases produce same results as original functions
         let uuid_orig = uuid_generate_v7_now();
@@ -617,12 +613,20 @@ mod tests {
         let version_alias = uuid_extract_version(uuid_orig);
         assert_eq!(version_orig, version_alias);
 
-        let ts_orig = uuid_to_timestamptz(uuid_orig);
-        let ts_alias = uuid_extract_timestamp(uuid_orig);
-        assert_eq!(ts_orig, ts_alias);
+        // uuid_extract_timestamp is only available for PG < 17
+        #[cfg(not(feature = "pg17"))]
+        {
+            let ts_orig = uuid_to_timestamptz(uuid_orig);
+            let ts_alias = uuid_extract_timestamp(uuid_orig);
+            assert_eq!(ts_orig, ts_alias);
+            
+            // Test uuid_extract_timestamp() alias
+            let timestamp = uuid_extract_timestamp(uuid_v7);
+            assert!(timestamp.is_some());
+        }
     }
 
-    #[cfg(not(any(feature = "pg17", feature = "pg18")))]
+    #[cfg(not(feature = "pg18"))]
     #[pg_test]
     fn test_uuidv7_with_interval() {
         // Test uuidv7 with interval parameter (PostgreSQL 18 compatibility)
@@ -637,11 +641,11 @@ mod tests {
         assert_eq!(version, 7);
         
         // Just verify that timestamp extraction works
-        let timestamp = uuid_extract_timestamp(uuid_past);
+        let timestamp = uuid_to_timestamptz(uuid_past);
         assert!(timestamp.is_some(), "Should be able to extract timestamp from UUIDv7");
     }
 
-    #[cfg(not(any(feature = "pg17", feature = "pg18")))]
+    #[cfg(not(feature = "pg18"))]
     #[pg_test]
     fn test_uuidv7_interval_ordering() {
         // Test that UUIDs generated with different intervals maintain proper ordering
@@ -654,8 +658,8 @@ mod tests {
         assert_eq!(uuid_extract_version(uuid_now), 7);
         
         // Verify timestamps can be extracted
-        let ts_past = uuid_extract_timestamp(uuid_past);
-        let ts_now = uuid_extract_timestamp(uuid_now);
+        let ts_past = uuid_to_timestamptz(uuid_past);
+        let ts_now = uuid_to_timestamptz(uuid_now);
         assert!(ts_past.is_some());
         assert!(ts_now.is_some());
         
@@ -664,6 +668,25 @@ mod tests {
         
         // Also verify UUID ordering (UUIDv7 should maintain time-based ordering)
         assert!(uuid_past < uuid_now, "Past UUID should be less than current UUID");
+    }
+
+    #[cfg(not(any(feature = "pg17", feature = "pg18")))]
+    #[pg_test]
+    fn test_uuid_extract_timestamp_pg16_only() {
+        // Test uuid_extract_timestamp function (only available for PostgreSQL < 17)
+        let uuid_v7 = uuid_generate_v7_now();
+        let timestamp = uuid_extract_timestamp(uuid_v7);
+        assert!(timestamp.is_some(), "Should be able to extract timestamp from UUIDv7");
+        
+        // Test that it returns the same result as uuid_to_timestamptz
+        let ts_orig = uuid_to_timestamptz(uuid_v7);
+        let ts_alias = uuid_extract_timestamp(uuid_v7);
+        assert_eq!(ts_orig, ts_alias, "uuid_extract_timestamp should match uuid_to_timestamptz");
+        
+        // Test with UUID v4 (should return None)
+        let uuid_v4 = Spi::get_one::<pgrx::Uuid>("SELECT gen_random_uuid()").unwrap().unwrap();
+        let timestamp_v4 = uuid_extract_timestamp(uuid_v4);
+        assert!(timestamp_v4.is_none(), "Should return None for non-timestamp UUIDs");
     }
 }
 
