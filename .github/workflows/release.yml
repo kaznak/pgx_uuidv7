@@ -8,6 +8,9 @@ on:
       - 'v*'
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
+permissions:
+  contents: write
+  
 jobs:
   build-linux-gnu:
     name: Build & Release for linux
