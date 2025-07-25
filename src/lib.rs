@@ -228,19 +228,19 @@ IS 'PostgreSQL 18 compatible alias for uuid_get_version(). Return the version of
     requires = [uuid_extract_version],
 );
 
-#[cfg(not(feature = "pg18"))]
+#[cfg(not(any(feature = "pg17", feature = "pg18")))]
 /// PostgreSQL 18 compatible alias for uuid_to_timestamptz()
-/// Only available when targeting PostgreSQL < 18 to avoid conflicts
+/// Only available when targeting PostgreSQL < 17 to avoid conflicts with native uuid_extract_timestamp
 #[pg_extern(immutable, parallel_safe)]
 fn uuid_extract_timestamp(uuid: pgrx::Uuid) -> Option<pgrx::datum::TimestampWithTimeZone> {
     uuid_to_timestamptz(uuid)
 }
 
-#[cfg(not(feature = "pg18"))]
+#[cfg(not(any(feature = "pg17", feature = "pg18")))]
 extension_sql!(
     r#"
 COMMENT ON FUNCTION "uuid_extract_timestamp"(uuid)
-IS 'PostgreSQL 18 compatible alias for uuid_to_timestamptz(). Convert a UUID to a timestamptz. The timestamp is the timestamp encoded in the UUID. The timezone is UTC.';
+IS 'PostgreSQL 18 compatible alias for uuid_to_timestamptz(). Convert a UUID to a timestamptz. The timestamp is the timestamp encoded in the UUID. The timezone is UTC. Only available for PostgreSQL < 17.';
 "#,
     name = "comment_uuid_extract_timestamp",
     requires = [uuid_extract_timestamp],
@@ -597,7 +597,7 @@ mod tests {
         assert!(same_timestamp);
     }
 
-    #[cfg(not(feature = "pg18"))]
+    #[cfg(not(any(feature = "pg17", feature = "pg18")))]
     #[pg_test]
     fn test_postgresql_18_compatibility() {
         // Test uuidv7() alias
@@ -622,7 +622,7 @@ mod tests {
         assert_eq!(ts_orig, ts_alias);
     }
 
-    #[cfg(not(feature = "pg18"))]
+    #[cfg(not(any(feature = "pg17", feature = "pg18")))]
     #[pg_test]
     fn test_uuidv7_with_interval() {
         // Test uuidv7 with interval parameter (PostgreSQL 18 compatibility)
@@ -641,7 +641,7 @@ mod tests {
         assert!(timestamp.is_some(), "Should be able to extract timestamp from UUIDv7");
     }
 
-    #[cfg(not(feature = "pg18"))]
+    #[cfg(not(any(feature = "pg17", feature = "pg18")))]
     #[pg_test]
     fn test_uuidv7_interval_ordering() {
         // Test that UUIDs generated with different intervals maintain proper ordering

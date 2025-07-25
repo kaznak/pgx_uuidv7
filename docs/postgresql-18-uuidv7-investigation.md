@@ -89,12 +89,20 @@ PostgreSQL 18では、UUIDv7のネイティブサポートが追加されます�
 |------|--------------|------------|
 | 関数名 | `uuid_extract_timestamp()` | `uuid_to_timestamptz()` |
 | 戻り値の型 | `timestamp with time zone` | `timestamp with time zone` |
-| 対応UUIDバージョン | v1, v7 | 主にv7 (uuid crateに依存) |
-| NULL処理 | v1/v7以外でNULL返却 | タイムスタンプ抽出不可時NULL |
+| 対応UUIDバージョン | v1, v7 | v1, v6, v7 (uuid crate 1.4.0対応) |
+| NULL処理 | v1/v7以外でNULL返却 | v1/v6/v7以外でNULL返却 |
 | タイムゾーン | UTC | UTC |
 | 実装 | ネイティブC | Rust (uuid crate使用) |
+| **タイムスタンプ精度** | **v1**: 100ナノ秒、**v7**: サブミリ秒(12bit) | **v1/v6**: 100ナノ秒、**v7**: ミリ秒のみ |
+| **PostgreSQL精度** | マイクロ秒精度まで保持 | マイクロ秒精度まで保持 |
 
-**備考**: PostgreSQL 17以前は`uuid_extract_timestamp`はv1のみ対応。PostgreSQL 18でv7サポートが追加された。
+**備考**: 
+- PostgreSQL 17以前は`uuid_extract_timestamp`はv1のみ対応。PostgreSQL 18でv7サポートが追加された。
+- **精度の詳細**:
+  - **UUIDv1/v6**: 両実装とも100ナノ秒精度（RFC 4122準拠）をフル活用
+  - **UUIDv7**: PostgreSQL 18は12ビットのサブミリ秒精度、pgx_uuidv7は**ミリ秒精度のみ**（uuid crate v1.4.0制限）
+  - **重要な制限**: PostgreSQL 18で生成されたサブミリ秒精度のUUIDv7でも、pgx_uuidv7の`uuid_to_timestamptz`はミリ秒精度に切り捨てられる
+  - **最終出力**: 両実装ともPostgreSQLの`timestamptz`型（マイクロ秒精度）で出力
 
 ## 移行戦略
 
