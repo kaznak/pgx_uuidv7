@@ -214,8 +214,8 @@ IS 'PostgreSQL 18 compatible function. Generate and return a new UUID using the 
 /// PostgreSQL 18 compatible alias for uuid_get_version()
 /// Only available when targeting PostgreSQL < 18 to avoid conflicts
 #[pg_extern(parallel_safe)]
-fn uuid_extract_version(uuid: pgrx::Uuid) -> i8 {
-    uuid_get_version(uuid)
+fn uuid_extract_version(uuid: pgrx::Uuid) -> i16 {
+    uuid_get_version(uuid) as i16
 }
 
 #[cfg(not(feature = "pg18"))]
@@ -603,7 +603,7 @@ mod tests {
         // Test uuidv7() alias
         let uuid_v7 = uuidv7();
         let version = uuid_extract_version(uuid_v7);
-        assert_eq!(version, 7);
+        assert_eq!(version, 7i16);
 
         // Test that aliases produce same results as original functions
         let uuid_orig = uuid_generate_v7_now();
@@ -611,7 +611,7 @@ mod tests {
         
         let version_orig = uuid_get_version(uuid_orig);
         let version_alias = uuid_extract_version(uuid_orig);
-        assert_eq!(version_orig, version_alias);
+        assert_eq!(version_orig as i16, version_alias);
 
         // uuid_extract_timestamp is only available for PG < 17
         #[cfg(not(feature = "pg17"))]
@@ -638,7 +638,7 @@ mod tests {
         
         let uuid_past = result.unwrap();
         let version = uuid_extract_version(uuid_past);
-        assert_eq!(version, 7);
+        assert_eq!(version, 7i16);
         
         // Just verify that timestamp extraction works
         let timestamp = uuid_to_timestamptz(uuid_past);
@@ -654,8 +654,8 @@ mod tests {
         let uuid_now = Spi::get_one::<pgrx::Uuid>("SELECT uuidv7()").unwrap().unwrap();
         
         // Verify all are version 7
-        assert_eq!(uuid_extract_version(uuid_past), 7);
-        assert_eq!(uuid_extract_version(uuid_now), 7);
+        assert_eq!(uuid_extract_version(uuid_past), 7i16);
+        assert_eq!(uuid_extract_version(uuid_now), 7i16);
         
         // Verify timestamps can be extracted
         let ts_past = uuid_to_timestamptz(uuid_past);

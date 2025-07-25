@@ -10,7 +10,7 @@ PostgreSQL 18では、UUIDv7のネイティブサポートが追加されます�
 
 1. **`uuidv7()`**
    - 現在時刻でUUIDv7を生成
-   - パラメータなし（RFC 9652準拠のため、カスタムタイムスタンプは受け付けない）
+   - パラメータなし（RFC 9562準拠のため、カスタムタイムスタンプは受け付けない）
    - 戻り値: `uuid`型
 
 2. **`uuidv7(interval)`**
@@ -37,7 +37,7 @@ PostgreSQL 18では、UUIDv7のネイティブサポートが追加されます�
 
 ### タイムスタンプ精度
 
-- **基本精度**: ミリ秒（48ビット、RFC 9652準拠）
+- **基本精度**: ミリ秒（48ビット、RFC 9562準拠）
 - **追加精度**: 12ビットの`rand_a`フィールドにサブミリ秒のタイムスタンプを格納
 - **単調性保証**: 同一バックエンド内で生成されるUUIDは単調増加を保証
   - システムクロックが逆行した場合でも対応
@@ -45,7 +45,7 @@ PostgreSQL 18では、UUIDv7のネイティブサポートが追加されます�
 
 ### 実装の特徴
 
-1. **RFC 9652準拠**: 最新のUUID仕様に完全準拠
+1. **RFC 9562準拠**: 最新のUUID仕様に完全準拠
 2. **ソート可能性**: タイムスタンプベースのため時系列でソート可能
 3. **インデックス効率**: 時系列順序により良好なインデックスローカリティ
 4. **ユニーク性**: 74ビットのランダム部分により衝突を防止
@@ -89,7 +89,7 @@ PostgreSQL 18では、UUIDv7のネイティブサポートが追加されます�
 |------|--------------|------------|
 | 関数名 | `uuid_extract_timestamp()` | `uuid_to_timestamptz()` |
 | 戻り値の型 | `timestamp with time zone` | `timestamp with time zone` |
-| 対応UUIDバージョン | v1, v7 | v1, v6, v7 (uuid crate 1.4.0対応) |
+| 対応UUIDバージョン | v1, v7 | v1, v6, v7 (uuid crate 1.17対応) |
 | NULL処理 | v1/v7以外でNULL返却 | v1/v6/v7以外でNULL返却 |
 | タイムゾーン | UTC | UTC |
 | 実装 | ネイティブC | Rust (uuid crate使用) |
@@ -100,7 +100,7 @@ PostgreSQL 18では、UUIDv7のネイティブサポートが追加されます�
 - PostgreSQL 17以前は`uuid_extract_timestamp`はv1のみ対応。PostgreSQL 18でv7サポートが追加された。
 - **精度の詳細**:
   - **UUIDv1/v6**: 両実装とも100ナノ秒精度（RFC 4122準拠）をフル活用
-  - **UUIDv7**: PostgreSQL 18は12ビットのサブミリ秒精度、pgx_uuidv7は**ミリ秒精度のみ**（uuid crate v1.4.0制限）
+  - **UUIDv7**: PostgreSQL 18は12ビットのサブミリ秒精度、pgx_uuidv7は**ミリ秒精度のみ**（uuid crate v1.17制限）
   - **重要な制限**: PostgreSQL 18で生成されたサブミリ秒精度のUUIDv7でも、pgx_uuidv7の`uuid_to_timestamptz`はミリ秒精度に切り捨てられる
   - **最終出力**: 両実装ともPostgreSQLの`timestamptz`型（マイクロ秒精度）で出力
 
