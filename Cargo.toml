@@ -1,6 +1,6 @@
 [package]
 name = "pgx_uuidv7"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 description = "A Postgres extension to generate and cast v7 UUIDs"
 license = "MIT"
