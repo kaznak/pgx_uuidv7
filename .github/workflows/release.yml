@@ -29,7 +29,7 @@ jobs:
         run: |
           make build PG_VERSION=${{ matrix.pgVersion }}
       - name: Upload Package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pgx-uuidv7-${{ matrix.pgVersion }}-amd64-linux-gnu.deb
           path: ./target/${{ env.PKG_NAME }}-${{ matrix.pgVersion }}-amd64-linux-gnu.deb
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Download all packages
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: ./packages
       - name: Create Release
