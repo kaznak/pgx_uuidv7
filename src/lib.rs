@@ -228,6 +228,51 @@ IS 'PostgreSQL 18 compatible alias for uuid_get_version(). Return the version of
     requires = [uuid_extract_version],
 );
 
+extension_sql!(
+    r#"
+-- UUIDv1
+CREATE DOMAIN uuidv1 AS uuid;
+
+ALTER DOMAIN uuidv1
+    ADD CONSTRAINT uuidv1 CHECK (uuid_extract_version(VALUE) = 1);
+
+COMMENT ON DOMAIN uuidv1 IS 'UUID であって、 UUIDv1 であるもの。';
+
+-- UUIDv3
+CREATE DOMAIN uuidv3 AS uuid;
+
+ALTER DOMAIN uuidv3
+    ADD CONSTRAINT uuidv3 CHECK (uuid_extract_version(VALUE) = 3);
+
+COMMENT ON DOMAIN uuidv3 IS 'UUID であって、 UUIDv3 であるもの。';
+
+-- UUIDv4
+CREATE DOMAIN uuidv4 AS uuid;
+
+ALTER DOMAIN uuidv4
+    ADD CONSTRAINT uuidv4 CHECK (uuid_extract_version(VALUE) = 4);
+
+COMMENT ON DOMAIN uuidv4 IS 'UUID であって、 UUIDv4 であるもの。';
+
+-- UUIDv5
+CREATE DOMAIN uuidv5 AS uuid;
+
+ALTER DOMAIN uuidv5
+    ADD CONSTRAINT uuidv5 CHECK (uuid_extract_version(VALUE) = 5);
+
+COMMENT ON DOMAIN uuidv5 IS 'UUID であって、 UUIDv5 であるもの。';
+
+-- UUIDv7
+CREATE DOMAIN uuidv7 AS uuid;
+
+ALTER DOMAIN uuidv7 ADD CONSTRAINT uuidv7 CHECK (uuid_extract_version(VALUE) = 7);
+
+COMMENT ON DOMAIN uuidv7 IS 'UUID であって、 UUIDv7 であるもの。';
+"#,
+    name = "domain_type_uuid_versions",
+    requires = [uuid_extract_version],
+);
+
 #[cfg(not(any(feature = "pg17", feature = "pg18")))]
 /// PostgreSQL 18 compatible alias for uuid_to_timestamptz()
 /// Only available when targeting PostgreSQL < 17 to avoid conflicts with native uuid_extract_timestamp
