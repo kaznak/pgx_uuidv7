@@ -118,7 +118,8 @@ mod tests {
         )
     }
     fn gen_pt() -> pgrx::datum::TimestampWithTimeZone {
-        pgrx::datum::TimestampWithTimeZone::with_timezone(2012, 3, 4, 5, 6, 7.123456789, "UTC").unwrap()
+        pgrx::datum::TimestampWithTimeZone::with_timezone(2012, 3, 4, 5, 6, 7.123456789, "UTC")
+            .unwrap()
     }
 
     #[pg_test]
