@@ -62,10 +62,10 @@ IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the 
 fn uuid_generate_v7_at_interval(interval: pgrx::datum::Interval) -> pgrx::Uuid {
     // Get current transaction timestamp directly (respects transaction boundaries)
     let current_time = pgrx::datum::datetime_support::now();
-    
+
     // Add interval directly to timestamp
     let target_time = current_time + interval;
-    
+
     // Generate UUID v7 with the calculated timestamp
     uuid_generate_v7(target_time)
 }
@@ -184,10 +184,10 @@ IS 'PostgreSQL 18 compatible alias for uuid_generate_v7_now(). Generate and retu
 fn uuidv7_with_interval(interval: pgrx::datum::Interval) -> pgrx::Uuid {
     // Get current transaction timestamp directly (respects transaction boundaries)
     let current_time = pgrx::datum::datetime_support::now();
-    
+
     // Add interval directly to timestamp
     let target_time = current_time + interval;
-    
+
     // Generate UUID v7 with the calculated timestamp
     uuid_generate_v7(target_time)
 }
@@ -271,7 +271,8 @@ mod tests {
     }
 
     fn gen_pt() -> pgrx::datum::TimestampWithTimeZone {
-        pgrx::datum::TimestampWithTimeZone::with_timezone(2012, 3, 4, 5, 6, 7.123456789, "UTC").unwrap()
+        pgrx::datum::TimestampWithTimeZone::with_timezone(2012, 3, 4, 5, 6, 7.123456789, "UTC")
+            .unwrap()
     }
 
     #[pg_test]
@@ -290,7 +291,8 @@ mod tests {
 
         let pt001: pgrx::datum::TimestampWithTimeZone = uuid_to_timestamptz(g).unwrap(); // <-- calling
         let pt002: pgrx::datum::TimestampWithTimeZone =
-            pgrx::datum::TimestampWithTimeZone::with_timezone(2012, 3, 4, 5, 6, 7.123, "UTC").unwrap();
+            pgrx::datum::TimestampWithTimeZone::with_timezone(2012, 3, 4, 5, 6, 7.123, "UTC")
+                .unwrap();
         assert_eq!(pt001, pt002);
     }
 
@@ -443,9 +445,10 @@ mod tests {
     fn test_invalid_uuid_version() {
         // Test with UUID v4 (not v7) - should return NULL
         let result = Spi::get_one::<pgrx::datum::TimestampWithTimeZone>(
-            "SELECT uuid_to_timestamptz(gen_random_uuid());"
-        ).unwrap();
-        
+            "SELECT uuid_to_timestamptz(gen_random_uuid());",
+        )
+        .unwrap();
+
         // Should return None for non-v7 UUIDs
         assert!(result.is_none());
     }
@@ -453,55 +456,69 @@ mod tests {
     #[pg_test]
     fn test_uuid_generate_v7_with_interval() {
         // Test uuid_generate_v7_at_interval function
-        let uuid_past = Spi::get_one::<pgrx::Uuid>(
-            "SELECT uuid_generate_v7_at_interval(INTERVAL '-1 hour');"
-        ).unwrap().unwrap();
-        
-        let uuid_now = Spi::get_one::<pgrx::Uuid>(
-            "SELECT uuid_generate_v7_now();"
-        ).unwrap().unwrap();
-        
-        let uuid_future = Spi::get_one::<pgrx::Uuid>(
-            "SELECT uuid_generate_v7_at_interval(INTERVAL '1 hour');"
-        ).unwrap().unwrap();
-        
+        let uuid_past =
+            Spi::get_one::<pgrx::Uuid>("SELECT uuid_generate_v7_at_interval(INTERVAL '-1 hour');")
+                .unwrap()
+                .unwrap();
+
+        let uuid_now = Spi::get_one::<pgrx::Uuid>("SELECT uuid_generate_v7_now();")
+            .unwrap()
+            .unwrap();
+
+        let uuid_future =
+            Spi::get_one::<pgrx::Uuid>("SELECT uuid_generate_v7_at_interval(INTERVAL '1 hour');")
+                .unwrap()
+                .unwrap();
+
         // Verify all are version 7
         assert_eq!(uuid_get_version(uuid_past), 7);
         assert_eq!(uuid_get_version(uuid_now), 7);
         assert_eq!(uuid_get_version(uuid_future), 7);
-        
+
         // Extract timestamps
         let ts_past = uuid_to_timestamptz(uuid_past).unwrap();
         let ts_now = uuid_to_timestamptz(uuid_now).unwrap();
         let ts_future = uuid_to_timestamptz(uuid_future).unwrap();
-        
+
         // Verify timestamp ordering
-        assert!(ts_past < ts_now, "Past timestamp should be less than current");
-        assert!(ts_now < ts_future, "Current timestamp should be less than future");
-        
+        assert!(
+            ts_past < ts_now,
+            "Past timestamp should be less than current"
+        );
+        assert!(
+            ts_now < ts_future,
+            "Current timestamp should be less than future"
+        );
+
         // Verify UUID ordering
-        assert!(uuid_past < uuid_now, "Past UUID should be less than current");
-        assert!(uuid_now < uuid_future, "Current UUID should be less than future");
+        assert!(
+            uuid_past < uuid_now,
+            "Past UUID should be less than current"
+        );
+        assert!(
+            uuid_now < uuid_future,
+            "Current UUID should be less than future"
+        );
     }
 
     #[pg_test]
     fn test_extreme_timestamps() {
         // Test near Unix epoch (1970-01-01)
-        let epoch_result = Spi::get_one::<pgrx::Uuid>(
-            "SELECT uuid_generate_v7('1970-01-01T00:00:00+00:00');"
-        ).unwrap();
+        let epoch_result =
+            Spi::get_one::<pgrx::Uuid>("SELECT uuid_generate_v7('1970-01-01T00:00:00+00:00');")
+                .unwrap();
         assert!(epoch_result.is_some());
 
         // Test year 2038 (32-bit timestamp overflow)
-        let y2038_result = Spi::get_one::<pgrx::Uuid>(
-            "SELECT uuid_generate_v7('2038-01-19T03:14:07+00:00');"
-        ).unwrap();
+        let y2038_result =
+            Spi::get_one::<pgrx::Uuid>("SELECT uuid_generate_v7('2038-01-19T03:14:07+00:00');")
+                .unwrap();
         assert!(y2038_result.is_some());
 
         // Test far future (year 2100)
-        let future_result = Spi::get_one::<pgrx::Uuid>(
-            "SELECT uuid_generate_v7('2100-01-01T00:00:00+00:00');"
-        ).unwrap();
+        let future_result =
+            Spi::get_one::<pgrx::Uuid>("SELECT uuid_generate_v7('2100-01-01T00:00:00+00:00');")
+                .unwrap();
         assert!(future_result.is_some());
 
         // Verify timestamp conversion works correctly
@@ -513,29 +530,30 @@ mod tests {
             SELECT 
                 uuid_to_timestamptz(id) = '2100-01-01T00:00:00+00:00'::timestamptz AS matches
             FROM test_uuid
-            "
-        ).unwrap();
+            ",
+        )
+        .unwrap();
         assert!(verify_result.unwrap());
     }
 
     #[pg_test]
     fn test_null_handling() {
         // Test NULL input for uuid_generate_v7
-        let null_timestamp_result = Spi::get_one::<pgrx::Uuid>(
-            "SELECT uuid_generate_v7(NULL::timestamptz);"
-        ).unwrap();
+        let null_timestamp_result =
+            Spi::get_one::<pgrx::Uuid>("SELECT uuid_generate_v7(NULL::timestamptz);").unwrap();
         assert!(null_timestamp_result.is_none());
 
         // Test NULL input for uuid_to_timestamptz
         let null_uuid_result = Spi::get_one::<pgrx::datum::TimestampWithTimeZone>(
-            "SELECT uuid_to_timestamptz(NULL::uuid);"
-        ).unwrap();
+            "SELECT uuid_to_timestamptz(NULL::uuid);",
+        )
+        .unwrap();
         assert!(null_uuid_result.is_none());
 
         // Test NULL input for timestamptz_to_uuid_v7_min
-        let null_min_result = Spi::get_one::<pgrx::Uuid>(
-            "SELECT timestamptz_to_uuid_v7_min(NULL::timestamptz);"
-        ).unwrap();
+        let null_min_result =
+            Spi::get_one::<pgrx::Uuid>("SELECT timestamptz_to_uuid_v7_min(NULL::timestamptz);")
+                .unwrap();
         assert!(null_min_result.is_none());
     }
 
@@ -553,8 +571,9 @@ mod tests {
                 timestamptz_to_uuid_v7_random(ts) AS uuid2,
                 timestamptz_to_uuid_v7_random(ts) AS uuid3
             FROM same_time;
-            "
-        ).unwrap();
+            ",
+        )
+        .unwrap();
 
         // Verify all UUIDs are different
         let unique_count = Spi::get_one::<i64>(
@@ -572,8 +591,10 @@ mod tests {
                 UNION ALL
                 SELECT uuid_to_timestamptz(uuid3) AS ts FROM uuid_test
             ) t;
-            "
-        ).unwrap().unwrap();
+            ",
+        )
+        .unwrap()
+        .unwrap();
         assert_eq!(same_timestamp_count, 1);
     }
 
@@ -590,8 +611,10 @@ mod tests {
                 '2023-06-15 10:00:00+00:00'::timestamptz AND
                 uuid_to_timestamptz(uuid_generate_v7('2023-06-15 06:00:00-04:00'::timestamptz)) = 
                 '2023-06-15 10:00:00+00:00'::timestamptz
-            "
-        ).unwrap().unwrap();
+            ",
+        )
+        .unwrap()
+        .unwrap();
 
         // All should convert back to the same UTC timestamp
         assert!(same_timestamp);
@@ -608,7 +631,7 @@ mod tests {
         // Test that aliases produce same results as original functions
         let uuid_orig = uuid_generate_v7_now();
         let _uuid_alias = uuidv7();
-        
+
         let version_orig = uuid_get_version(uuid_orig);
         let version_alias = uuid_extract_version(uuid_orig);
         assert_eq!(version_orig as i16, version_alias);
@@ -619,7 +642,7 @@ mod tests {
             let ts_orig = uuid_to_timestamptz(uuid_orig);
             let ts_alias = uuid_extract_timestamp(uuid_orig);
             assert_eq!(ts_orig, ts_alias);
-            
+
             // Test uuid_extract_timestamp() alias
             let timestamp = uuid_extract_timestamp(uuid_v7);
             assert!(timestamp.is_some());
@@ -631,18 +654,19 @@ mod tests {
     fn test_uuidv7_with_interval() {
         // Test uuidv7 with interval parameter (PostgreSQL 18 compatibility)
         // Test via SQL to match real-world usage patterns
-        let result = Spi::get_one::<pgrx::Uuid>(
-            "SELECT uuidv7(INTERVAL '-1 hour');"
-        ).unwrap();
+        let result = Spi::get_one::<pgrx::Uuid>("SELECT uuidv7(INTERVAL '-1 hour');").unwrap();
         assert!(result.is_some());
-        
+
         let uuid_past = result.unwrap();
         let version = uuid_extract_version(uuid_past);
         assert_eq!(version, 7i16);
-        
+
         // Just verify that timestamp extraction works
         let timestamp = uuid_to_timestamptz(uuid_past);
-        assert!(timestamp.is_some(), "Should be able to extract timestamp from UUIDv7");
+        assert!(
+            timestamp.is_some(),
+            "Should be able to extract timestamp from UUIDv7"
+        );
     }
 
     #[cfg(not(feature = "pg18"))]
@@ -650,24 +674,34 @@ mod tests {
     fn test_uuidv7_interval_ordering() {
         // Test that UUIDs generated with different intervals maintain proper ordering
         // Test via SQL to match real-world usage patterns
-        let uuid_past = Spi::get_one::<pgrx::Uuid>("SELECT uuidv7(INTERVAL '-1 hour')").unwrap().unwrap();
-        let uuid_now = Spi::get_one::<pgrx::Uuid>("SELECT uuidv7()").unwrap().unwrap();
-        
+        let uuid_past = Spi::get_one::<pgrx::Uuid>("SELECT uuidv7(INTERVAL '-1 hour')")
+            .unwrap()
+            .unwrap();
+        let uuid_now = Spi::get_one::<pgrx::Uuid>("SELECT uuidv7()")
+            .unwrap()
+            .unwrap();
+
         // Verify all are version 7
         assert_eq!(uuid_extract_version(uuid_past), 7i16);
         assert_eq!(uuid_extract_version(uuid_now), 7i16);
-        
+
         // Verify timestamps can be extracted
         let ts_past = uuid_to_timestamptz(uuid_past);
         let ts_now = uuid_to_timestamptz(uuid_now);
         assert!(ts_past.is_some());
         assert!(ts_now.is_some());
-        
+
         // Verify timestamp ordering: past < now
-        assert!(ts_past.unwrap() < ts_now.unwrap(), "Past timestamp should be less than current timestamp");
-        
+        assert!(
+            ts_past.unwrap() < ts_now.unwrap(),
+            "Past timestamp should be less than current timestamp"
+        );
+
         // Also verify UUID ordering (UUIDv7 should maintain time-based ordering)
-        assert!(uuid_past < uuid_now, "Past UUID should be less than current UUID");
+        assert!(
+            uuid_past < uuid_now,
+            "Past UUID should be less than current UUID"
+        );
     }
 
     #[cfg(not(any(feature = "pg17", feature = "pg18")))]
@@ -676,17 +710,28 @@ mod tests {
         // Test uuid_extract_timestamp function (only available for PostgreSQL < 17)
         let uuid_v7 = uuid_generate_v7_now();
         let timestamp = uuid_extract_timestamp(uuid_v7);
-        assert!(timestamp.is_some(), "Should be able to extract timestamp from UUIDv7");
-        
+        assert!(
+            timestamp.is_some(),
+            "Should be able to extract timestamp from UUIDv7"
+        );
+
         // Test that it returns the same result as uuid_to_timestamptz
         let ts_orig = uuid_to_timestamptz(uuid_v7);
         let ts_alias = uuid_extract_timestamp(uuid_v7);
-        assert_eq!(ts_orig, ts_alias, "uuid_extract_timestamp should match uuid_to_timestamptz");
-        
+        assert_eq!(
+            ts_orig, ts_alias,
+            "uuid_extract_timestamp should match uuid_to_timestamptz"
+        );
+
         // Test with UUID v4 (should return None)
-        let uuid_v4 = Spi::get_one::<pgrx::Uuid>("SELECT gen_random_uuid()").unwrap().unwrap();
+        let uuid_v4 = Spi::get_one::<pgrx::Uuid>("SELECT gen_random_uuid()")
+            .unwrap()
+            .unwrap();
         let timestamp_v4 = uuid_extract_timestamp(uuid_v4);
-        assert!(timestamp_v4.is_none(), "Should return None for non-timestamp UUIDs");
+        assert!(
+            timestamp_v4.is_none(),
+            "Should return None for non-timestamp UUIDs"
+        );
     }
 }
 
