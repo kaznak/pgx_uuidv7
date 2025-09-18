@@ -9,6 +9,6 @@
         "OSSP",
         "pgrx",
         "timestamptz",
-        "uuidv7"
+        "uuidv"
     ]
 }
