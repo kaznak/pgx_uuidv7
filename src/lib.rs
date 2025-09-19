@@ -760,24 +760,12 @@ mod tests {
             builder.into_uuid()
         }
 
-        fn assert_domain_accepts(table: &str, uuid: uuid::Uuid) {
+        fn insert_into_domain(table: &str, uuid: uuid::Uuid) -> bool {
             let insert_sql = format!("INSERT INTO {table} VALUES ('{uuid}');");
-            let result = PgTryBuilder::default().catch(|| Spi::run(&insert_sql));
-            match result {
-                Ok(Ok(())) => {}
-                other => panic!("Expected insert into {table} to succeed, got {:?}", other),
-            }
-        }
-
-        fn assert_domain_rejects(table: &str, uuid: uuid::Uuid) {
-            let insert_sql = format!("INSERT INTO {table} VALUES ('{uuid}');");
-            let result = PgTryBuilder::default().catch(|| Spi::run(&insert_sql));
-            let rejected = matches!(result, Ok(Err(_)) | Err(_));
-            assert!(
-                rejected,
-                "Expected insert into {table} to fail for UUID {uuid}, got {:?}",
-                result
-            );
+            PgTryBuilder::new(|| matches!(Spi::run(&insert_sql), Ok(())))
+                .catch_others(|_| false)
+                .catch_rust_panic(|_| false)
+                .execute()
         }
 
         fn setup_domain(domain: &str) -> String {
@@ -822,7 +810,12 @@ mod tests {
         for (domain, valid_uuid, invalid_uuid) in cases {
             let table = setup_domain(domain);
 
-            assert_domain_accepts(&table, valid_uuid);
+            assert!(
+                insert_into_domain(&table, valid_uuid),
+                "Expected insert into {table} to succeed for valid UUID {valid_uuid}",
+                table = table,
+                valid_uuid = valid_uuid
+            );
 
             let stored_version = Spi::get_one::<i16>(&format!(
                 "SELECT uuid_extract_version(id) FROM {table} LIMIT 1;"
@@ -835,7 +828,12 @@ mod tests {
                 "Stored UUID version should match domain {domain}"
             );
 
-            assert_domain_rejects(&table, invalid_uuid);
+            assert!(
+                !insert_into_domain(&table, invalid_uuid),
+                "Expected insert into {table} to fail for invalid UUID {invalid_uuid}",
+                table = table,
+                invalid_uuid = invalid_uuid
+            );
 
             teardown_domain(&table);
         }
