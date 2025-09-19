@@ -749,6 +749,90 @@ mod tests {
         );
     }
 
+    #[pg_test]
+    fn test_uuid_domains_enforce_versions() {
+        // uuidv1 domain
+        Spi::run("DROP TABLE IF EXISTS domain_check_uuidv1;").unwrap();
+        Spi::run("CREATE TABLE domain_check_uuidv1 (id uuidv1);").unwrap();
+        Spi::run(
+            "INSERT INTO domain_check_uuidv1 VALUES ('6ba7b810-9dad-11d1-80b4-00c04fd430c8'::uuid);",
+        )
+        .unwrap();
+        let v1_invalid = Spi::run(
+            "INSERT INTO domain_check_uuidv1 VALUES ('21b7357c-ee2e-4f0b-8ca8-41f0ea6b3fa0'::uuid);",
+        );
+        assert!(
+            v1_invalid.is_err(),
+            "uuidv1 domain should reject non-version-1 UUIDs"
+        );
+        Spi::run("DROP TABLE domain_check_uuidv1;").unwrap();
+
+        // uuidv3 domain
+        Spi::run("DROP TABLE IF EXISTS domain_check_uuidv3;").unwrap();
+        Spi::run("CREATE TABLE domain_check_uuidv3 (id uuidv3);").unwrap();
+        Spi::run(
+            "INSERT INTO domain_check_uuidv3 VALUES ('3b12f1df-5232-3a0d-8df6-1f06fbcf0b61'::uuid);",
+        )
+        .unwrap();
+        let v3_invalid = Spi::run(
+            "INSERT INTO domain_check_uuidv3 VALUES ('6ba7b810-9dad-11d1-80b4-00c04fd430c8'::uuid);",
+        );
+        assert!(
+            v3_invalid.is_err(),
+            "uuidv3 domain should reject non-version-3 UUIDs"
+        );
+        Spi::run("DROP TABLE domain_check_uuidv3;").unwrap();
+
+        // uuidv4 domain
+        Spi::run("DROP TABLE IF EXISTS domain_check_uuidv4;").unwrap();
+        Spi::run("CREATE TABLE domain_check_uuidv4 (id uuidv4);").unwrap();
+        Spi::run(
+            "INSERT INTO domain_check_uuidv4 VALUES ('21b7357c-ee2e-4f0b-8ca8-41f0ea6b3fa0'::uuid);",
+        )
+        .unwrap();
+        let v4_invalid = Spi::run(
+            "INSERT INTO domain_check_uuidv4 VALUES ('3bbcee75-cecc-5b56-8031-b6641c1ed1f1'::uuid);",
+        );
+        assert!(
+            v4_invalid.is_err(),
+            "uuidv4 domain should reject non-version-4 UUIDs"
+        );
+        Spi::run("DROP TABLE domain_check_uuidv4;").unwrap();
+
+        // uuidv5 domain
+        Spi::run("DROP TABLE IF EXISTS domain_check_uuidv5;").unwrap();
+        Spi::run("CREATE TABLE domain_check_uuidv5 (id uuidv5);").unwrap();
+        Spi::run(
+            "INSERT INTO domain_check_uuidv5 VALUES ('3bbcee75-cecc-5b56-8031-b6641c1ed1f1'::uuid);",
+        )
+        .unwrap();
+        let v5_invalid = Spi::run(
+            "INSERT INTO domain_check_uuidv5 VALUES ('21b7357c-ee2e-4f0b-8ca8-41f0ea6b3fa0'::uuid);",
+        );
+        assert!(
+            v5_invalid.is_err(),
+            "uuidv5 domain should reject non-version-5 UUIDs"
+        );
+        Spi::run("DROP TABLE domain_check_uuidv5;").unwrap();
+
+        // uuidv7 domain
+        Spi::run("DROP TABLE IF EXISTS domain_check_uuidv7;").unwrap();
+        Spi::run("CREATE TABLE domain_check_uuidv7 (id uuidv7);").unwrap();
+        Spi::run("INSERT INTO domain_check_uuidv7 VALUES (uuid_generate_v7_now());").unwrap();
+        let v7_invalid =
+            Spi::run("INSERT INTO domain_check_uuidv7 VALUES ('21b7357c-ee2e-4f0b-8ca8-41f0ea6b3fa0'::uuid);");
+        assert!(
+            v7_invalid.is_err(),
+            "uuidv7 domain should reject non-version-7 UUIDs"
+        );
+        let stored =
+            Spi::get_one::<pgrx::Uuid>("SELECT id FROM domain_check_uuidv7 ORDER BY id LIMIT 1;")
+                .unwrap()
+                .unwrap();
+        assert_eq!(uuid_get_version(stored), 7);
+        Spi::run("DROP TABLE domain_check_uuidv7;").unwrap();
+    }
+
     #[cfg(not(any(feature = "pg17", feature = "pg18")))]
     #[pg_test]
     fn test_uuid_extract_timestamp_pg16_only() {
