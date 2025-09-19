@@ -768,17 +768,6 @@ mod tests {
                 .execute()
         }
 
-        fn setup_domain(domain: &str) -> String {
-            let table = format!("domain_check_{domain}");
-            Spi::run(&format!("DROP TABLE IF EXISTS {table};")).unwrap();
-            Spi::run(&format!("CREATE TABLE {table} (id {domain});")).unwrap();
-            table
-        }
-
-        fn teardown_domain(table: &str) {
-            let _ = Spi::run(&format!("DROP TABLE IF EXISTS {table};"));
-        }
-
         let cases = [
             (
                 "uuidv1",
@@ -807,8 +796,9 @@ mod tests {
             ),
         ];
 
-        for (domain, valid_uuid, invalid_uuid) in cases {
-            let table = setup_domain(domain);
+        for (idx, (domain, valid_uuid, invalid_uuid)) in cases.into_iter().enumerate() {
+            let table = format!("domain_check_{domain}_{idx}");
+            Spi::run(&format!("CREATE TEMP TABLE {table} (id {domain});")).unwrap();
 
             assert!(
                 insert_into_domain(&table, valid_uuid),
@@ -834,8 +824,6 @@ mod tests {
                 table = table,
                 invalid_uuid = invalid_uuid
             );
-
-            teardown_domain(&table);
         }
     }
 
