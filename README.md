@@ -96,9 +96,9 @@ This allows for easy migration to PostgreSQL 18 when it becomes available.
 
 uses:
 
-- [pgrx v0.11.0](https://github.com/pgcentralfoundation/pgrx)([docs](https://docs.rs/pgrx/0.11.0/pgrx/index.html))
+- [pgrx v0.16.1](https://github.com/pgcentralfoundation/pgrx)([docs](https://docs.rs/pgrx/0.16.1/pgrx/index.html))
     - install this into your environment to develop this extension.
-- uuid([docs](https://docs.rs/uuid/1.4.1/uuid/index.html))
+- uuid([docs](https://docs.rs/uuid/1.17/uuid/index.html))
 
 lots of code is copied and modified from these following repositories:
 
@@ -112,7 +112,7 @@ Thank you.
 ### Build commands
 
 ```bash
-PG_VERSION=16 # set postgresql major version
+PG_VERSION=17 # set postgresql major version (17 or 18)
 cargo pgrx package --no-default-features --features pg$PG_VERSION --pg-config $(ls ~/.pgrx/$PG_VERSION.*/pgrx-install/bin/pg_config 2>/dev/null | tail -n1)
 ```
 
@@ -131,27 +131,28 @@ Before creating a release, update the version:
 **Update version in `Cargo.toml`:**
 ```toml
 [package]
-version = "0.1.4"  # Update to new version
+version = "0.1.6"  # Update to new version
 ```
 
 **Commit the version update:**
 ```bash
 git add Cargo.toml
-git commit -m "chore: bump version to 0.1.4"
+git commit -m "chore: bump version to 0.1.6"
 git push
 ```
 
 #### 2. Create and Push Tag
 
 ```bash
-git tag v0.1.4
-git push origin v0.1.4
+git tag v0.1.6
+git push origin v0.1.6
 ```
 
 #### 3. Monitor Automatic Build
 
 The workflow will automatically:
-- Build packages for PostgreSQL 16 and 17
+- Run tests for PostgreSQL 17 and 18
+- Build packages for PostgreSQL 17 and 18
 - Create Debian packages (`.deb` files)
 - Generate a draft release on GitHub with auto-generated release notes
 
@@ -169,13 +170,13 @@ Before publishing, verify the build results:
 - Go to GitHub Releases page
 - Confirm the draft release was created with your tag version
 - Verify both packages are attached:
-  - `pgx-uuidv7-16-amd64-linux-gnu.deb`
   - `pgx-uuidv7-17-amd64-linux-gnu.deb`
+  - `pgx-uuidv7-18-amd64-linux-gnu.deb`
 
 **Optional: Test the packages locally:**
 ```bash
 # Download and test one of the packages
-wget https://github.com/kaznak/pgx_uuidv7/releases/download/v0.1.4/pgx-uuidv7-16-amd64-linux-gnu.deb
+wget https://github.com/kaznak/pgx_uuidv7/releases/download/v0.1.6/pgx-uuidv7-17-amd64-linux-gnu.deb
 # Test installation in a clean environment
 ```
 
@@ -193,8 +194,8 @@ wget https://github.com/kaznak/pgx_uuidv7/releases/download/v0.1.4/pgx-uuidv7-16
 ### Supported PostgreSQL Versions
 
 The release workflow builds packages for:
-- PostgreSQL 16 (`pgx-uuidv7-16-amd64-linux-gnu.deb`)
 - PostgreSQL 17 (`pgx-uuidv7-17-amd64-linux-gnu.deb`)
+- PostgreSQL 18 (`pgx-uuidv7-18-amd64-linux-gnu.deb`)
 
 ### Release Notes
 
