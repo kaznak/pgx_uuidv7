@@ -24,7 +24,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
       - name: Run tests
         run: |
           make test PG_VERSION=${{ matrix.pgVersion }}
@@ -36,6 +36,7 @@ jobs:
         with:
           name: pgx-uuidv7-${{ matrix.pgVersion }}-amd64-linux-gnu.deb
           path: ./target/${{ env.PKG_NAME }}-${{ matrix.pgVersion }}-amd64-linux-gnu.deb
+          if-no-files-found: error
 
   create-release:
     name: Create Release
@@ -43,17 +44,19 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
       - name: Download all packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: ./packages
+          pattern: pgx-uuidv7-*
+          merge-multiple: true
       - name: Create Release
         run: |
           gh release create ${{ github.ref_name }} \
             --draft \
             --title "${{ github.ref_name }}" \
             --generate-notes \
-            ./packages/*/*.deb
+            ./packages/*.deb
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
