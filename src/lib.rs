@@ -436,7 +436,7 @@ mod tests {
                     &[],
                 )
                 .unwrap()
-                .map(|row| (row["data"].value::<String>().unwrap()))
+                .map(|row| row["data"].value::<String>().unwrap())
                 .collect::<Vec<_>>()
         });
         assert!(ret0.len() == 2);
@@ -459,7 +459,7 @@ mod tests {
                     &[],
                 )
                 .unwrap()
-                .map(|row| (row["data"].value::<String>().unwrap()))
+                .map(|row| row["data"].value::<String>().unwrap())
                 .collect::<Vec<_>>()
         });
         assert!(ret1.len() == 1);
@@ -480,7 +480,7 @@ mod tests {
                     &[],
                 )
                 .unwrap()
-                .map(|row| (row["data"].value::<String>().unwrap()))
+                .map(|row| row["data"].value::<String>().unwrap())
                 .collect::<Vec<_>>()
         });
         assert!(ret2.len() == 1);
