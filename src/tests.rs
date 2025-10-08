@@ -1,7 +1,7 @@
 #[cfg(any(test, feature = "pg_test"))]
-#[pg_schema]
+#[pgrx::pg_schema]
 mod tests {
-    use super::super::*;
+    use crate::*;
     use pgrx::pg_sys::PgTryBuilder;
     use uuid::{Variant, Version};
 
