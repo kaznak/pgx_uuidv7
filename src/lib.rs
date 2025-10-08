@@ -228,6 +228,7 @@ IS 'PostgreSQL 18 compatible alias for uuid_get_version(). Return the version of
     requires = [uuid_extract_version],
 );
 
+#[cfg(not(feature = "pg18"))]
 extension_sql!(
     r#"
 -- UUIDv1
@@ -271,6 +272,51 @@ COMMENT ON DOMAIN uuidv7 IS 'A UUID that is specifically version 7.';
 "#,
     name = "domain_type_uuid_versions",
     requires = [uuid_extract_version],
+);
+
+#[cfg(feature = "pg18")]
+extension_sql!(
+    r#"
+-- UUIDv1
+CREATE DOMAIN uuidv1 AS uuid;
+
+ALTER DOMAIN uuidv1
+    ADD CONSTRAINT uuidv1 CHECK (uuid_get_version(VALUE) = 1);
+
+COMMENT ON DOMAIN uuidv1 IS 'A UUID that is specifically version 1.';
+
+-- UUIDv3
+CREATE DOMAIN uuidv3 AS uuid;
+
+ALTER DOMAIN uuidv3
+    ADD CONSTRAINT uuidv3 CHECK (uuid_get_version(VALUE) = 3);
+
+COMMENT ON DOMAIN uuidv3 IS 'A UUID that is specifically version 3.';
+
+-- UUIDv4
+CREATE DOMAIN uuidv4 AS uuid;
+
+ALTER DOMAIN uuidv4
+    ADD CONSTRAINT uuidv4 CHECK (uuid_get_version(VALUE) = 4);
+
+COMMENT ON DOMAIN uuidv4 IS 'A UUID that is specifically version 4.';
+
+-- UUIDv5
+CREATE DOMAIN uuidv5 AS uuid;
+
+ALTER DOMAIN uuidv5
+    ADD CONSTRAINT uuidv5 CHECK (uuid_get_version(VALUE) = 5);
+
+COMMENT ON DOMAIN uuidv5 IS 'A UUID that is specifically version 5.';
+
+-- UUIDv7
+CREATE DOMAIN uuidv7 AS uuid;
+
+ALTER DOMAIN uuidv7 ADD CONSTRAINT uuidv7 CHECK (uuid_get_version(VALUE) = 7);
+
+COMMENT ON DOMAIN uuidv7 IS 'A UUID that is specifically version 7.';
+"#,
+    name = "domain_type_uuid_versions",
 );
 
 #[cfg(not(any(feature = "pg17", feature = "pg18")))]
