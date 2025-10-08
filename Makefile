@@ -13,7 +13,8 @@ build:
 		$(ARCH)
 
 test:
-	docker run --rm -v $(PWD):/checkout -w /checkout $(BUILD_IMAGE) cargo pgrx test
+	docker run --rm -v $(PWD):/checkout -w /checkout $(BUILD_IMAGE)	\
+		cargo pgrx test  --no-default-features --features pg$(PG_VERSION)
 
 clean:
 	cargo clean
