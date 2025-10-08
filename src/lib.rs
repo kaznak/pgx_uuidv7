@@ -270,7 +270,7 @@ ALTER DOMAIN uuidv7 ADD CONSTRAINT uuidv7 CHECK (uuid_extract_version(VALUE) = 7
 COMMENT ON DOMAIN uuidv7 IS 'A UUID that is specifically version 7.';
 "#,
     name = "domain_type_uuid_versions",
-    requires = [uuid_extract_version],
+    // requires = [uuid_extract_version],
 );
 
 #[cfg(not(any(feature = "pg17", feature = "pg18")))]
