@@ -13,7 +13,7 @@ permissions:
   
 jobs:
   build-packages:
-    name: Build packages
+    name: Build packages for PostgreSQL ${{ matrix.pgVersion }} on Debian ${{ matrix.debianCodename }}
     strategy:
       fail-fast: false
       matrix:
