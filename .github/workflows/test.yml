@@ -18,6 +18,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        debianCodename:
+          - bullseye
+          - bookworm
+          - 13_trixie
         pgVersion:
           - 17
           - 18
@@ -29,4 +33,4 @@ jobs:
 
       - name: Run tests
         run: |
-          make test PG_VERSION=${{ matrix.pgVersion }}
+          make test PG_VERSION=${{ matrix.pgVersion }} DEBIAN_CODENAME=${{ matrix.debianCodename }}
