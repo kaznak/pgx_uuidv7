@@ -1,9 +1,10 @@
 PG_VERSION=17
+DEBIAN_CODENAME=bullseye
 ARCH=amd64
 
 PGRX_VERSION=$(shell yq -r -o json '.dependencies.pgrx' Cargo.toml | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
 # debian のバージョンはメインの使用環境である cloudnativepg のイメージの debian のバージョンに合わせる
-BUILD_IMAGE=ghcr.io/kaznak/pgrx-build:debian_bookworm-pg$(PG_VERSION)-pgrx$(PGRX_VERSION)
+BUILD_IMAGE=ghcr.io/kaznak/pgrx-build:debian_$(DEBIAN_CODENAME)-pg$(PG_VERSION)-pgrx$(PGRX_VERSION)
 
 build:
 	id

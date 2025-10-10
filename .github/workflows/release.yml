@@ -17,6 +17,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        debianCodename:
+          - bullseye
+          - bookworm
+          - 13_trixie
         pgVersion:
         - 17
         - 18
@@ -30,12 +34,12 @@ jobs:
           make test PG_VERSION=${{ matrix.pgVersion }}
       - name: Build Package
         run: |
-          make build PG_VERSION=${{ matrix.pgVersion }}
+          make build PG_VERSION=${{ matrix.pgVersion }} DEBIAN_CODENAME=${{ matrix.debianCodename }}
       - name: Upload Package
         uses: actions/upload-artifact@v4
         with:
           name: pgx-uuidv7-${{ matrix.pgVersion }}-amd64-linux-gnu.deb
-          path: ./target/${{ env.PKG_NAME }}-${{ matrix.pgVersion }}-amd64-linux-gnu.deb
+          path: ./target/${{ env.PKG_NAME }}-pg${{ matrix.pgVersion }}-amd64-${{ matrix.debianCodename }}-gnu.deb
           if-no-files-found: error
 
   create-release:
