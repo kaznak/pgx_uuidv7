@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   test:
-    name: Test PostgreSQL ${{ matrix.pgVersion }}
+    name: Test PostgreSQL ${{ matrix.pgVersion }} on Debian ${{ matrix.debianCodename }}
     strategy:
       fail-fast: false
       matrix:
