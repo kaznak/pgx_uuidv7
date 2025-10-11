@@ -157,6 +157,35 @@ IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the 
     requires = [timestamptz_to_uuid_v7_max],
 );
 
+extension_sql!(
+    r#"
+-- uuid → bytea
+CREATE FUNCTION uuid_to_bytea(u uuid)
+RETURNS bytea LANGUAGE internal IMMUTABLE STRICT AS 'uuid_send';
+
+COMMENT ON FUNCTION "uuid_to_bytea"(uuid)
+IS 'Convert a uuid to bytea.';
+
+-- bytea → uuid
+CREATE FUNCTION bytea_to_uuid(b bytea)
+RETURNS uuid LANGUAGE internal IMMUTABLE STRICT AS 'uuid_recv';
+
+COMMENT ON FUNCTION "bytea_to_uuid"(bytea)
+IS 'Convert a bytea to uuid.';
+
+-- キャスト経路を登録
+CREATE CAST (uuid AS bytea)
+  WITH FUNCTION uuid_to_bytea(uuid)
+  AS ASSIGNMENT;
+
+CREATE CAST (bytea AS uuid)
+  WITH FUNCTION bytea_to_uuid(bytea)
+  AS ASSIGNMENT;
+"#,
+    name = "uuid_bytea_converters"
+);
+
+
 // PostgreSQL 18 compatibility aliases - only for versions < 18
 #[cfg(not(feature = "pg18"))]
 /// PostgreSQL 18 compatible alias for uuid_generate_v7_now()
