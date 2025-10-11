@@ -10,6 +10,7 @@
         "OSSP",
         "pgrx",
         "timestamptz",
+        "trixie",
         "uuidv"
     ]
 }

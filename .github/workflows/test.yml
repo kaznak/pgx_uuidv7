@@ -21,7 +21,7 @@ jobs:
         debianCodename:
           - bullseye
           - bookworm
-          - 13_trixie
+          - trixie
         pgVersion:
           - 17
           - 18
