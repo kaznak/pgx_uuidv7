@@ -160,18 +160,25 @@ IS 'Generate and return a new UUID using the v7 algorithm. The timestamp is the 
 extension_sql!(
     r#"
 -- uuid → bytea
-CREATE FUNCTION uuid_to_bytea(u uuid)
-RETURNS bytea LANGUAGE internal IMMUTABLE STRICT AS 'uuid_send';
+-- uuid → bytea
+CREATE OR REPLACE FUNCTION uuid_to_bytea(u uuid)
+RETURNS bytea LANGUAGE sql IMMUTABLE STRICT AS $$
+  SELECT decode(replace(uuid_out(u)::text, '-', ''), 'hex');
+$$;
 
-COMMENT ON FUNCTION "uuid_to_bytea"(uuid)
-IS 'Convert a uuid to bytea.';
+COMMENT ON FUNCTION uuid_to_bytea(uuid)
+IS 'Convert a uuid to bytea safely (via uuid_out).';
+
 
 -- bytea → uuid
-CREATE FUNCTION bytea_to_uuid(b bytea)
-RETURNS uuid LANGUAGE internal IMMUTABLE STRICT AS 'uuid_recv';
+CREATE OR REPLACE FUNCTION bytea_to_uuid(b bytea)
+RETURNS uuid LANGUAGE sql IMMUTABLE STRICT AS $$
+  SELECT uuid_in(encode(b, 'hex')::cstring);
+$$;
 
-COMMENT ON FUNCTION "bytea_to_uuid"(bytea)
-IS 'Convert a bytea to uuid.';
+COMMENT ON FUNCTION bytea_to_uuid(bytea)
+IS 'Convert a bytea to uuid safely (via uuid_in).';
+
 
 -- キャスト経路を登録
 CREATE CAST (uuid AS bytea)
@@ -184,7 +191,6 @@ CREATE CAST (bytea AS uuid)
 "#,
     name = "uuid_bytea_converters"
 );
-
 
 // PostgreSQL 18 compatibility aliases - only for versions < 18
 #[cfg(not(feature = "pg18"))]

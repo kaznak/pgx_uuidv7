@@ -554,6 +554,61 @@ mod tests {
             "Should return None for non-timestamp UUIDs"
         );
     }
+
+    #[pg_test]
+    fn test_uuid_to_bytea_sql() {
+        let uuid_str = "12345678-1234-4abc-8def-0123456789ab";
+        let hex_str = "1234567812344abc8def0123456789ab";
+
+        let result: bool = Spi::get_one(&format!(
+            "SELECT encode(uuid_to_bytea('{}'::uuid), 'hex') = '{}';",
+            uuid_str, hex_str
+        ))
+        .unwrap()
+        .unwrap();
+        assert_eq!(result, true);
+    }
+
+    #[pg_test]
+    fn test_uuid_to_bytea_sql_cast() {
+        let uuid_str = "12345678-1234-4abc-8def-0123456789ab";
+        let hex_str = "1234567812344abc8def0123456789ab";
+
+        let result: bool = Spi::get_one(&format!(
+            "SELECT encode(('{}'::uuid)::bytea, 'hex') = '{}';",
+            uuid_str, hex_str
+        ))
+        .unwrap()
+        .unwrap();
+        assert_eq!(result, true);
+    }
+
+    #[pg_test]
+    fn test_bytea_to_uuid_sql() {
+        let uuid_str = "12345678-1234-4abc-8def-0123456789ab";
+        let hex_str = "1234567812344abc8def0123456789ab";
+
+        let result: bool = Spi::get_one(&format!(
+            "SELECT bytea_to_uuid(decode('{}', 'hex')) = '{}'::uuid;",
+            hex_str, uuid_str
+        ))
+        .unwrap()
+        .unwrap();
+        assert_eq!(result, true);
+    }
+    #[pg_test]
+    fn test_bytea_to_uuid_sql_cast() {
+        let uuid_str = "12345678-1234-4abc-8def-0123456789ab";
+        let hex_str = "1234567812344abc8def0123456789ab";
+
+        let result: bool = Spi::get_one(&format!(
+            "SELECT decode('{}', 'hex')::uuid = '{}'::uuid;",
+            hex_str, uuid_str
+        ))
+        .unwrap()
+        .unwrap();
+        assert_eq!(result, true);
+    }
 }
 
 /// This module is required by `cargo pgrx test` invocations.
