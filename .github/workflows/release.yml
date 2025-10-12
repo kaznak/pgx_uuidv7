@@ -38,7 +38,7 @@ jobs:
       - name: Upload Package
         uses: actions/upload-artifact@v4
         with:
-          name: pgx-uuidv7-${{ matrix.pgVersion }}-amd64-linux-gnu.deb
+          name: pgx-uuidv7-pg${{ matrix.pgVersion }}-amd64-${{ matrix.debianCodename }}-gnu.deb
           path: ./target/${{ env.PKG_NAME }}-pg${{ matrix.pgVersion }}-amd64-${{ matrix.debianCodename }}-gnu.deb
           if-no-files-found: error
 
