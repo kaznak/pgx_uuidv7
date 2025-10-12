@@ -52,6 +52,7 @@ PROGRESS "$LINENO" "reading arguments"
 
 PG_VERSION=$1
 ARCH=$2
+DEBIAN_CODENAME=$3
 
 EXT_NAME=$(yq -r -o json '.package.name' Cargo.toml)
 EXT_VERSION=$(yq -r -o json '.package.version' Cargo.toml)
@@ -108,7 +109,7 @@ sudo chown -R root:root ${PKG_BASED}
 dpkg-deb -Zxz --build --root-owner-group ${PKG_BASED}
 
 # TODO artifact name shoud be changed
-PKG_OUT=$based/target/${PKG_NAME}-${PG_VERSION}-${ARCH}-linux-gnu.deb
+PKG_OUT=$based/target/${PKG_NAME}-pg${PG_VERSION}-${ARCH}-${DEBIAN_CODENAME}-gnu.deb
 PROGRESS "$LINENO" "copying package to $PKG_OUT"
 mv ${PKG_BASED}.deb $PKG_OUT
 
