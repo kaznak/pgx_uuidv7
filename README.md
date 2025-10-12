@@ -131,21 +131,21 @@ Before creating a release, update the version:
 **Update version in `Cargo.toml`:**
 ```toml
 [package]
-version = "0.1.6"  # Update to new version
+version = "0.1.7"  # Update to new version
 ```
 
 **Commit the version update:**
 ```bash
 git add Cargo.toml
-git commit -m "chore: bump version to 0.1.6"
+git commit -m "chore: bump version to 0.1.7"
 git push
 ```
 
 #### 2. Create and Push Tag
 
 ```bash
-git tag v0.1.6
-git push origin v0.1.6
+git tag v0.1.7
+git push origin v0.1.7
 ```
 
 #### 3. Monitor Automatic Build
@@ -170,13 +170,13 @@ Before publishing, verify the build results:
 - Go to GitHub Releases page
 - Confirm the draft release was created with your tag version
 - Verify both packages are attached:
-  - `pgx-uuidv7-17-amd64-linux-gnu.deb`
-  - `pgx-uuidv7-18-amd64-linux-gnu.deb`
+  - `pgx-uuidv7-17-amd64-bullseys-gnu.deb`
+  - `pgx-uuidv7-18-amd64-bullseys-gnu.deb`
 
 **Optional: Test the packages locally:**
 ```bash
 # Download and test one of the packages
-wget https://github.com/kaznak/pgx_uuidv7/releases/download/v0.1.6/pgx-uuidv7-17-amd64-linux-gnu.deb
+wget https://github.com/kaznak/pgx_uuidv7/releases/download/v0.1.7/pgx-uuidv7-17-amd64-bullseys-gnu.deb
 # Test installation in a clean environment
 ```
 
@@ -194,8 +194,8 @@ wget https://github.com/kaznak/pgx_uuidv7/releases/download/v0.1.6/pgx-uuidv7-17
 ### Supported PostgreSQL Versions
 
 The release workflow builds packages for:
-- PostgreSQL 17 (`pgx-uuidv7-17-amd64-linux-gnu.deb`)
-- PostgreSQL 18 (`pgx-uuidv7-18-amd64-linux-gnu.deb`)
+- PostgreSQL 17 (`pgx-uuidv7-17-amd64-bullseys-gnu.deb`)
+- PostgreSQL 18 (`pgx-uuidv7-18-amd64-bullseys-gnu.deb`)
 
 ### Release Notes
 
